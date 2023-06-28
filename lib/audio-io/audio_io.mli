@@ -1,9 +1,14 @@
-val a : string
+module System : sig
+  val env_logger_init : unit -> unit
+end
 
 module Output_stream : sig
   type t
 
-  val hello : unit -> unit
-  val new_player : unit -> t
-  val example : t -> float -> int32
+  val create : unit -> t
+  val sample_rate : t -> int
+  val num_channels : t -> int
+  val set_buffer_padding : t -> int -> unit
+  val samples_behind : t -> int
+  val send_sample : t -> float -> unit
 end

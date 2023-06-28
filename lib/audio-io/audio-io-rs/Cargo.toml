@@ -10,5 +10,8 @@ lto = true
 crate-type = ["staticlib"]
 
 [dependencies]
-ocaml = "0.22"
+anyhow = "1.0"
 cpal = "0.15"
+env_logger = "0.10"
+log = "0.4"
+ocaml = "0.22"

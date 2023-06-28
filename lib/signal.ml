@@ -40,11 +40,18 @@ let both a b =
       (xa, xb))
 
 let const x = of_raw (Fun.const x)
+let of_ref ref = of_raw (fun _ -> !ref)
+
+let var x =
+  let ref = ref x in
+  (of_ref ref, ref)
 
 module type Ops = sig
   val of_raw : 'a Raw.t -> 'a t
+  val of_ref : 'a ref -> 'a t
   val sample : 'a t -> Ctx.t -> 'a
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val both : 'a t -> 'b t -> ('a * 'b) t
   val const : 'a -> 'a t
+  val var : 'a -> 'a t * 'a ref
 end

@@ -1,5 +1,5 @@
 type t
 
 val create : ?downsample:int -> unit -> t
-val set_signal : t -> float Signal.t -> unit
+val signal_ref : t -> float Signal.t ref
 val run : t -> unit Lwt.t

@@ -4,7 +4,7 @@ module Ctx = Signal.Ctx
 type t = {
   output_stream : Output_stream.t;
   mutable sample_index : int;
-  mutable signal : float Signal.t;
+  signal : float Signal.t ref;
   sample_rate_hz : float;
   num_channels : int;
 }
@@ -14,12 +14,12 @@ let create ?(downsample = 1) () =
   {
     output_stream;
     sample_index = 0;
-    signal = Signal.const 0.0;
+    signal = ref (Signal.const 0.0);
     sample_rate_hz = Int.to_float (Output_stream.sample_rate output_stream);
     num_channels = Output_stream.num_channels output_stream;
   }
 
-let set_signal t signal = t.signal <- signal
+let signal_ref t = t.signal
 
 let play_stream_fragment t =
   let num_samples_to_play =
@@ -30,7 +30,7 @@ let play_stream_fragment t =
       { Ctx.sample_index = t.sample_index; sample_rate_hz = t.sample_rate_hz }
     in
     t.sample_index <- t.sample_index + 1;
-    let sample = Signal.sample t.signal ctx in
+    let sample = Signal.sample !(t.signal) ctx in
     Output_stream.send_sample t.output_stream sample
   done
 

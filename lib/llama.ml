@@ -1,9 +1,15 @@
-let make_signal () =
-  let open Dsl in
-  oscillator ~waveform:(const Sine) ~frequency_hz:(const 440.0)
+module Interactive = struct
+  let go () =
+    Audio_io.System.env_logger_init ();
+    let signal_player = Signal_player.create () in
+    let ref = Signal_player.signal_ref signal_player in
+    let () = Lwt.async (fun () -> Signal_player.run signal_player) in
+    ref
 
-let test () =
-  Audio_io.System.env_logger_init ();
-  let signal_player = Signal_player.create ~downsample:1 () in
-  Signal_player.set_signal signal_player (make_signal ());
-  Lwt_main.run (Signal_player.run signal_player)
+  include Dsl
+  include Signal
+end
+
+module Dsl = Dsl
+module Signal_player = Signal_player
+module Signal = Signal

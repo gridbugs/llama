@@ -4,7 +4,6 @@
   (source_tree cpal-wrapper-rs))
  (action
   (progn
-   (run cp -r cpal-wrapper-rs/dot_cargo .cargo) ; needed becausee dune ignores hidden files?
    (run cargo build --manifest-path=cpal-wrapper-rs/Cargo.toml --release)
    (run mv cpal-wrapper-rs/target/release/%{target} %{target}))))
 

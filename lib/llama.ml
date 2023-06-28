@@ -1,4 +1,4 @@
-module Interactive = struct
+module Live = struct
   let go () =
     Audio_io.System.env_logger_init ();
     let signal_player = Signal_player.create () in

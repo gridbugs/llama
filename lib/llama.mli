@@ -1,4 +1,4 @@
-module Interactive : sig
+module Live : sig
   val go : unit -> float Signal.t ref
 
   include Dsl.S

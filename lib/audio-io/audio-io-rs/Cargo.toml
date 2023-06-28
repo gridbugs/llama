@@ -1,5 +1,5 @@
 [package]
-name = "cpal_wrapper"
+name = "audio_io"
 version = "0.1.0"
 edition = "2021"
 

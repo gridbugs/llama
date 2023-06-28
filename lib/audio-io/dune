@@ -1,17 +1,17 @@
 (rule
- (target libcpal_wrapper.a)
+ (target libaudio_io.a)
  (deps
-  (source_tree cpal-wrapper-rs))
+  (source_tree audio-io-rs))
  (action
   (progn
-   (run cargo build --manifest-path=cpal-wrapper-rs/Cargo.toml --release)
-   (run mv cpal-wrapper-rs/target/release/%{target} %{target}))))
+   (run cargo build --manifest-path=audio-io-rs/Cargo.toml --release)
+   (run mv audio-io-rs/target/release/%{target} %{target}))))
 
 (library
- (name cpal_wrapper)
- (public_name llama.cpal_wrapper)
+ (name audio_io)
+ (public_name llama.audio_io)
  (no_dynlink)
- (foreign_archives cpal_wrapper)
+ (foreign_archives audio_io)
  (c_library_flags
   (-lpthread -lc -lm))
  (flags

@@ -1,0 +1,14 @@
+[package]
+name = "cpal_wrapper"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+lto = true
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+ocaml = "0.22"
+cpal = "0.15"

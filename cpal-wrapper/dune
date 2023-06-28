@@ -1,0 +1,34 @@
+(rule
+ (target libcpal_wrapper.a)
+ (deps
+  (source_tree cpal-wrapper-rs))
+ (action
+  (progn
+   (run cp -r cpal-wrapper-rs/dot_cargo .cargo) ; needed becausee dune ignores hidden files?
+   (run cargo build --manifest-path=cpal-wrapper-rs/Cargo.toml --release)
+   (run mv cpal-wrapper-rs/target/release/%{target} %{target}))))
+
+(library
+ (name cpal_wrapper)
+ (public_name llama.cpal_wrapper)
+ (no_dynlink)
+ (foreign_archives cpal_wrapper)
+ (c_library_flags
+  (-lpthread -lc -lm))
+ (flags
+  (-ccopt
+   -framework
+   -ccopt
+   CoreServices
+   -ccopt
+   -framework
+   -ccopt
+   CoreAudio
+   -ccopt
+   -framework
+   -ccopt
+   AudioUnit
+   -ccopt
+   -framework
+   -ccopt
+   AudioToolbox)))

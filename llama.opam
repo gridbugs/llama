@@ -9,6 +9,7 @@ bug-reports: "https://github.com/gridbugs/llama/issues"
 depends: [
   "dune" {>= "3.0"}
   "ocaml" {< "5.0.0"}
+  "lwt" {>= "5.6"}
   "odoc" {with-doc}
 ]
 build: [

@@ -13,4 +13,5 @@
  (synopsis "Language for Live Audio Module Arrangement")
  (depends
   ; the ocaml-boxroot-sys-0.2.0 crate doesn't build with ocaml 5
-  (ocaml (< "5.0.0"))))
+  (ocaml (< "5.0.0"))
+  (lwt (>= 5.6))))

@@ -11,8 +11,6 @@ module Output_stream = struct
   let create_with_downsample downsample =
     create_with_downsample_32 (Int32.of_int downsample)
 
-  let create () = create_with_downsample 1
-
   external sample_rate_32 : t -> int32 = "sample_rate"
 
   let sample_rate t = sample_rate_32 t |> Int32.to_int

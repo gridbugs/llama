@@ -131,6 +131,10 @@ module Adsr_linear = struct
     |> Signal.of_raw
 end
 
+module Sequencer = struct
+  type output = { value : float Signal.t; gate : bool Signal.t }
+end
+
 module Step_sequencer = struct
   type step = { value : float Signal.t; period_s : float Signal.t }
   type t = { sequence : step option list; clock : bool Signal.t }
@@ -141,8 +145,6 @@ module Step_sequencer = struct
     current_value : float;
   }
 
-  type output = { value : float Signal.t; gate : bool Signal.t }
-
   let init_state t =
     {
       step_index = List.length t.sequence - 1;
@@ -152,12 +154,13 @@ module Step_sequencer = struct
 
   let signal t =
     let sequence_array = Array.of_list t.sequence in
-    let sequence_length = List.length t.sequence in
     let combined =
       Raw.with_state ~init:(init_state t) ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
           if Signal.sample t.clock ctx then
-            let step_index = (state.step_index + 1) mod sequence_length in
+            let step_index =
+              (state.step_index + 1) mod Array.length sequence_array
+            in
             let gate_remain_s, current_value =
               match Array.get sequence_array step_index with
               | Some current_step ->
@@ -179,7 +182,49 @@ module Step_sequencer = struct
              (current_value, gate_remain_s > 0.0))
       |> Signal.of_raw
     in
-    { value = Signal.map combined ~f:fst; gate = Signal.map combined ~f:snd }
+    {
+      Sequencer.value = Signal.map combined ~f:fst;
+      gate = Signal.map combined ~f:snd;
+    }
+end
+
+module Random_sequencer = struct
+  type t = {
+    values : float Signal.t list;
+    period : float Signal.t;
+    clock : bool Signal.t;
+  }
+
+  type state = { gate_remain_s : float; current_value : float }
+
+  let signal t =
+    let value_array = Array.of_list t.values in
+    let combined =
+      Raw.with_state ~init:{ gate_remain_s = 0.0; current_value = 0.0 }
+        ~f:(fun state ctx ->
+          let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
+          if Signal.sample t.clock ctx then
+            let index = Random.int (Array.length value_array) in
+            let current_value =
+              Signal.sample (Array.get value_array index) ctx
+            in
+            let gate_remain_s =
+              Signal.sample t.period ctx -. gate_remain_s_delta
+            in
+            { current_value; gate_remain_s }
+          else
+            {
+              state with
+              gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
+            })
+      |> Raw.map ~f:(fun { current_value; gate_remain_s; _ } ->
+             (current_value, gate_remain_s > 0.0))
+      |> Signal.of_raw
+    in
+    {
+      Sequencer.value = Signal.map combined ~f:fst;
+      gate = Signal.map combined ~f:snd;
+    }
 end
 
 module Butterworth_filter = struct

@@ -39,11 +39,13 @@ val adsr_linear :
   release_s:float t ->
   float t
 
+type sequencer_output = { value : float Signal.t; gate : bool Signal.t }
 type step_sequencer_step = { value : float Signal.t; period_s : float Signal.t }
-type step_sequencer_output = { value : float Signal.t; gate : bool Signal.t }
 
 val step_sequencer :
-  step_sequencer_step option list -> bool t -> step_sequencer_output
+  step_sequencer_step option list -> bool t -> sequencer_output
+
+val random_sequencer : float t list -> float t -> bool t -> sequencer_output
 
 val butterworth_low_pass_filter :
   ?filter_order_half:int ->

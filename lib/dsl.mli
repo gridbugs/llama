@@ -4,11 +4,29 @@ include module type of struct
   include Signal
 end
 
-val silence : float t
+type waveform = Sine | Saw | Triangle | Square | Noise
 
-type waveform = Sine | Saw
+val oscillator :
+  ?square_wave_pulse_width_01:float t -> waveform t -> float t -> float t
 
-val oscillator : waveform t -> float t -> float t
+val noise_01 : unit -> float t
+
+val low_frequency_oscillator :
+  ?square_wave_pulse_width_01:float t ->
+  ?reset_offset_01:float t ->
+  waveform t ->
+  float t ->
+  bool t ->
+  float t
+
+val low_frequency_oscillator_01 :
+  ?square_wave_pulse_width_01:float t ->
+  ?reset_offset_01:float t ->
+  waveform t ->
+  float t ->
+  bool t ->
+  float t
+
 val clock : float t -> bool t
 val amplifier : float t -> volume:float t -> float t
 val asr_linear : gate:bool t -> attack_s:float t -> release_s:float t -> float t
@@ -52,3 +70,5 @@ val chebyshev_high_pass_filter :
   cutoff_hz:float t ->
   epsilon:float t ->
   float t
+
+val sample_and_hold : float t -> bool t -> float t

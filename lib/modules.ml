@@ -7,15 +7,45 @@ let sweep_01 frequency_hz =
       Float.rem (state +. state_delta) 1.0)
 
 module Oscillator = struct
-  type waveform = Sine | Saw
-  type t = { waveform : waveform Signal.t; frequency_hz : float Signal.t }
+  type waveform = Sine | Saw | Triangle | Square | Noise
+
+  type t = {
+    waveform : waveform Signal.t;
+    frequency_hz : float Signal.t;
+    square_wave_pulse_width_01 : float Signal.t;
+    reset_trigger : bool Signal.t;
+    reset_offset_01 : float Signal.t;
+  }
 
   let signal t =
-    sweep_01 t.frequency_hz
+    Raw.with_state ~init:None ~f:(fun state ctx ->
+        let state =
+          match state with
+          | None -> Signal.sample t.reset_offset_01 ctx
+          | Some state ->
+              if Signal.sample t.reset_trigger ctx then
+                Signal.sample t.reset_offset_01 ctx
+              else state
+        in
+        let state_delta =
+          Signal.sample t.frequency_hz ctx /. ctx.sample_rate_hz
+        in
+        Some (Float.rem (state +. state_delta) 1.0))
     |> Raw.bind ~f:(fun state ctx ->
+           let state =
+             match state with
+             | None -> Signal.sample t.reset_offset_01 ctx
+             | Some state -> state
+           in
            match Signal.sample t.waveform ctx with
            | Sine -> Float.sin (state *. Float.pi *. 2.0)
-           | Saw -> (state *. 2.0) -. 1.0)
+           | Saw -> (state *. 2.0) -. 1.0
+           | Triangle -> (Float.abs ((state *. 2.0) -. 1.0) *. 2.0) -. 1.0
+           | Square ->
+               if state < Signal.sample t.square_wave_pulse_width_01 ctx then
+                 -1.0
+               else 1.0
+           | Noise -> Random.float 2.0 -. 1.0)
     |> Signal.of_raw
 end
 
@@ -171,4 +201,14 @@ module Chebyshev_filter = struct
 
   let signal_low_pass = Biquad_filter.Chebyshev.signal_low_pass
   let signal_high_pass = Biquad_filter.Chebyshev.signal_high_pass
+end
+
+module Sample_and_hold = struct
+  type t = { signal : float Signal.t; trigger : bool Signal.t }
+
+  let signal t =
+    Raw.with_state ~init:0.0 ~f:(fun state ctx ->
+        if Signal.sample t.trigger ctx then Signal.sample t.signal ctx
+        else state)
+    |> Signal.of_raw
 end

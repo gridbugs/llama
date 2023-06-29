@@ -56,6 +56,9 @@ let var x =
   let ref = ref x in
   (of_ref ref, ref)
 
+let silence = const 0.0
+let never = const false
+
 let trigger t =
   of_raw
     (let previous = ref false in
@@ -79,3 +82,16 @@ let debug t ~f =
   map t ~f:(fun x ->
       f x;
       x)
+
+let sum ts =
+  of_raw (fun ctx ->
+      List.fold_left ts ~init:0.0 ~f:(fun acc signal ->
+          acc +. sample signal ctx))
+
+let mean ts =
+  let length = Int.to_float (List.length ts) in
+  sum ts |> map ~f:(fun sum -> sum /. length)
+
+let to_01 = map ~f:(fun x -> (x +. 1.0) /. 2.0)
+let add a b = both a b |> map ~f:(fun (a, b) -> a +. b)
+let ( +. ) a b = add a b

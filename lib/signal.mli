@@ -19,14 +19,25 @@ val map : 'a t -> f:('a -> 'b) -> 'b t
 val both : 'a t -> 'b t -> ('a * 'b) t
 val const : 'a -> 'a t
 val var : 'a -> 'a t * 'a ref
+val silence : float t
+val never : bool t
 val trigger : bool t -> bool t
 val scale : float -> float t -> float t
 val offset : float -> float t -> float t
 
-(* The function f(x) = exp(k * (x - a)) - b
+val exp01 : float -> float t -> float t
+(** The function f(x) = exp(k * (x - a)) - b
    ...where a and b are chosen so that f(0) = 0 and f(1) = 1.
    The k parameter controls how sharp the curve is.
    It approaches a linear function as k approaches 0.
    k = 0 is special cased as a linear function for convenience. *)
-val exp01 : float -> float t -> float t
+
 val debug : 'a t -> f:('a -> unit) -> 'a t
+
+val to_01 : float t -> float t
+(** Takes a signal assumed to be in the range -1..1 and shifts and scales it to be in the range 0..1 *)
+
+val sum : float t list -> float t
+val mean : float t list -> float t
+val add : float t -> float t -> float t
+val ( +. ) : float t -> float t -> float t

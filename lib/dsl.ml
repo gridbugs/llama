@@ -1,12 +1,38 @@
 open! Modules
 include Signal
 
-let silence = const 0.0
+type waveform = Oscillator.waveform = Sine | Saw | Triangle | Square | Noise
 
-type waveform = Oscillator.waveform = Sine | Saw
+let oscillator ?(square_wave_pulse_width_01 = const 0.5) waveform frequency_hz =
+  Oscillator.(
+    signal
+      {
+        waveform;
+        frequency_hz;
+        square_wave_pulse_width_01;
+        reset_offset_01 = const 0.0;
+        reset_trigger = const false;
+      })
 
-let oscillator waveform frequency_hz =
-  Oscillator.(signal { waveform; frequency_hz })
+let noise_01 () = oscillator (const Noise) (const 0.0) |> to_01
+
+let low_frequency_oscillator ?(square_wave_pulse_width_01 = const 0.5)
+    ?(reset_offset_01 = const 0.0) waveform frequency_hz reset_trigger =
+  Oscillator.(
+    signal
+      {
+        waveform;
+        frequency_hz;
+        square_wave_pulse_width_01;
+        reset_offset_01;
+        reset_trigger;
+      })
+
+let low_frequency_oscillator_01 ?(square_wave_pulse_width_01 = const 0.5)
+    ?(reset_offset_01 = const 0.0) waveform frequency_hz reset_trigger =
+  low_frequency_oscillator ~square_wave_pulse_width_01 ~reset_offset_01 waveform
+    frequency_hz reset_trigger
+  |> to_01
 
 let clock frequency_hz = Clock.(signal { frequency_hz })
 let amplifier signal_ ~volume = Amplifier.(signal { signal = signal_; volume })
@@ -52,3 +78,6 @@ let chebyshev_high_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
     ~epsilon =
   Chebyshev_filter.(
     signal_high_pass { signal = signal_; cutoff_hz; epsilon } ~filter_order_half)
+
+let sample_and_hold signal_ trigger =
+  Sample_and_hold.(signal { signal = signal_; trigger })

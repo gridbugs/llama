@@ -40,4 +40,6 @@ val to_01 : float t -> float t
 val sum : float t list -> float t
 val mean : float t list -> float t
 val add : float t -> float t -> float t
-val ( +. ) : float t -> float t -> float t
+val ( +.. ) : float t -> float t -> float t
+val mul : float t -> float t -> float t
+val ( *.. ) : float t -> float t -> float t

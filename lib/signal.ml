@@ -94,4 +94,6 @@ let mean ts =
 
 let to_01 = map ~f:(fun x -> (x +. 1.0) /. 2.0)
 let add a b = both a b |> map ~f:(fun (a, b) -> a +. b)
-let ( +. ) a b = add a b
+let ( +.. ) a b = add a b
+let mul a b = both a b |> map ~f:(fun (a, b) -> a *. b)
+let ( *.. ) a b = mul a b

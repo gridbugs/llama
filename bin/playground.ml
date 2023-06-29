@@ -2,12 +2,21 @@ open Llama
 open Dsl
 
 let make_sequencer clock =
+  let pentatonic o = [ (`C, o); (`D, o); (`F, o); (`G, o); (`A, o) ] in
+  let notes = List.append (pentatonic 3) (pentatonic 2) in
+  let random_sequencer_values =
+    List.map notes ~f:(fun note -> const (Music.Note.frequency_hz note))
+  in
+  random_sequencer random_sequencer_values (const 0.01) clock
+
+let _make_sequencer clock =
   let open Sequence in
   let sequence = to_steps middle_c_loop ~time_scale:1.0 in
   step_sequencer sequence clock
 
 let make_signal () =
-  let sequencer_clock_freq = 1.0 in
+  Random.self_init ();
+  let sequencer_clock_freq = 4.0 in
   let effect_clock_freq = 4.0 in
   let sequencer_clock = clock (const sequencer_clock_freq) in
   let effect_clock = clock (const effect_clock_freq) in
@@ -28,30 +37,25 @@ let make_signal () =
   let osc =
     mean
       [
-        oscillator ~square_wave_pulse_width_01:(const 0.2) (const Square)
-          osc_freq;
-        oscillator ~square_wave_pulse_width_01:(const 0.2) (const Square)
-          (osc_freq |> scale 1.5);
+        oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw) osc_freq;
+        (* oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw)
+           (osc_freq |> scale 0.5); *)
       ]
   in
-  let release_s = const 10.0 in
+  let release_s = const 0.4 in
   let filter_env =
-    adsr_linear ~gate ~attack_s:(const 10.0) ~decay_s:(const 0.1)
+    adsr_linear ~gate ~attack_s:(const 0.01) ~decay_s:(const 0.2)
       ~sustain_01:(const 1.0) ~release_s
-    |> exp01 1.0
+    |> exp01 4.0
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 10.0)
-      ~cutoff_hz:
-        ((filter_env |> scale 1000.0 |> offset 0.0)
-        +. (lfo |> scale 2000.0)
-        +. (sah_noise |> scale 1000.0))
-    |> chebyshev_high_pass_filter ~epsilon:(const 1.0)
-         ~cutoff_hz:(lfo2 |> scale 400.0)
+    chebyshev_low_pass_filter osc ~epsilon:(const 0.01)
+      ~cutoff_hz:(filter_env |> scale 500.0 |> offset 0.0)
+    |> chebyshev_high_pass_filter ~epsilon:(const 1.0) ~cutoff_hz:(const 0.0)
   in
   amplifier filtered_osc
-    ~volume:(asr_linear ~gate ~attack_s:(const 0.01) ~release_s)
-  |> map ~f:(fun x -> Float.clamp_1 (x *. 2.0))
+    ~volume:(asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp01 1.0)
+  |> map ~f:(fun x -> Float.clamp_1 (x *. 1.0))
 
 let () =
   Audio_io.System.env_logger_init ();

@@ -38,3 +38,17 @@ val butterworth_high_pass_filter :
   float t ->
   half_power_frequency_hz:float t ->
   float t
+
+val chebyshev_low_pass_filter :
+  ?filter_order_half:int ->
+  float t ->
+  cutoff_hz:float t ->
+  epsilon:float t ->
+  float t
+
+val chebyshev_high_pass_filter :
+  ?filter_order_half:int ->
+  float t ->
+  cutoff_hz:float t ->
+  epsilon:float t ->
+  float t

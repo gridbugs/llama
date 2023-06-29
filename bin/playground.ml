@@ -1,8 +1,8 @@
 open Llama
 open Dsl
 
-let c = 130.81 /. 2.0
-let e = 164.81 /. 2.0
+let c = 130.81
+let e = 164.81
 
 let hsc_sequence =
   [
@@ -24,14 +24,14 @@ let hsc_sequence =
     None;
   ]
 
-let short_sequence = [ Some (c *. 2.0, 1.0); None ]
+let short_sequence = [ Some (c, 1.0); None ]
 
 let make_signal () =
   let sequencer_freq = 8.0 in
   let sequencer_clock = clock (const sequencer_freq) in
   let { value = sequencer_freq; gate } =
     step_sequencer
-      (List.map short_sequence
+      (List.map hsc_sequence
          ~f:
            (Option.map (fun (freq, period) ->
                 {
@@ -43,19 +43,18 @@ let make_signal () =
   let osc = oscillator (const Saw) sequencer_freq in
   let release_s = const 0.1 in
   let filter_env =
-    adsr_linear ~gate ~attack_s:(const 0.3) ~decay_s:(const 0.2)
-      ~sustain_01:(const 1.0) ~release_s
+    adsr_linear ~gate ~attack_s:(const 0.1) ~decay_s:(const 0.2)
+      ~sustain_01:(const 0.0) ~release_s
     |> exp01 1.0
-    (*|> butterworth_low_pass_filter ~half_power_frequency_hz:(const 200.0) *)
-    (*    |> debug ~f:(fun x -> print_endline (Printf.sprintf "%f" x)) *)
   in
   let filtered_osc =
-    butterworth_low_pass_filter osc
-      ~half_power_frequency_hz:(filter_env |> scale 5000.0 |> offset 100.0)
-    |> butterworth_high_pass_filter ~half_power_frequency_hz:(const 200.0)
+    chebyshev_low_pass_filter osc ~epsilon:(const 8.0)
+      ~cutoff_hz:(filter_env |> scale 3000.0 |> offset 0.0)
+    |> chebyshev_high_pass_filter ~epsilon:(const 2.0) ~cutoff_hz:(const 300.0)
   in
   amplifier filtered_osc
     ~volume:(asr_linear ~gate ~attack_s:(const 0.01) ~release_s)
+  |> map ~f:(fun x -> Float.clamp_1 (x *. 10.0))
 
 let () =
   Audio_io.System.env_logger_init ();

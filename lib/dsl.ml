@@ -42,3 +42,13 @@ let butterworth_high_pass_filter ?(filter_order_half = 1) signal_
     signal_high_pass
       { signal = signal_; half_power_frequency_hz }
       ~filter_order_half)
+
+let chebyshev_low_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
+    ~epsilon =
+  Chebyshev_filter.(
+    signal_low_pass { signal = signal_; cutoff_hz; epsilon } ~filter_order_half)
+
+let chebyshev_high_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
+    ~epsilon =
+  Chebyshev_filter.(
+    signal_high_pass { signal = signal_; cutoff_hz; epsilon } ~filter_order_half)

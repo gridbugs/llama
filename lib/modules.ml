@@ -169,8 +169,6 @@ module Biquad_filter = struct
     { a = 0.0; d1 = 0.0; d2 = 0.0; w0 = 0.0; w1 = 0.0; w2 = 0.0 }
 
   module Buffer = struct
-    type t = buffer_entry array
-
     let create filter_order_half =
       Array.init filter_order_half ~f:(fun _ -> buffer_entry_zeroes ())
 
@@ -252,6 +250,84 @@ module Biquad_filter = struct
         (raw t ~update_buffer:update_buffer_high_pass
            ~apply_buffer:Buffer.apply_high_pass ~filter_order_half)
   end
+
+  module Chebyshev = struct
+    type t = {
+      signal : float Signal.t;
+      cutoff_hz : float Signal.t;
+      epsilon : float Signal.t;
+    }
+
+    let update_buffer_low_pass buffer ~cutoff_sample_rate_ratio ~epsilon =
+      let a = Float.tan (Float.pi *. cutoff_sample_rate_ratio) in
+      let a2 = a *. a in
+      let u =
+        Float.log ((1.0 +. Float.sqrt (1.0 +. (epsilon *. epsilon))) /. epsilon)
+      in
+      let n = Int.to_float (Array.length buffer * 2) in
+      let su = Float.sinh (u /. n) in
+      let cu = Float.cosh (u /. n) in
+      Array.iteri buffer ~f:(fun i entry ->
+          let theta =
+            Float.pi *. ((2.0 *. Int.to_float i) +. 1.0) /. (2.0 *. n)
+          in
+          let b = Float.sin theta *. su in
+          let c = Float.cos theta *. cu in
+          let c = (b *. b) +. (c *. c) in
+          let s = (a2 *. c) +. (2.0 *. a *. b) +. 1.0 in
+          entry.a <- a2 /. (4.0 *. s);
+          entry.d1 <- 2.0 *. (1.0 -. (a2 *. c)) /. s;
+          entry.d2 <- -.((a2 *. c) -. (2.0 *. a *. b) +. 1.0) /. s)
+
+    let update_buffer_high_pass buffer ~cutoff_sample_rate_ratio ~epsilon =
+      let a = Float.tan (Float.pi *. cutoff_sample_rate_ratio) in
+      let a2 = a *. a in
+      let u =
+        Float.log ((1.0 +. Float.sqrt (1.0 +. (epsilon *. epsilon))) /. epsilon)
+      in
+      let n = Int.to_float (Array.length buffer * 2) in
+      let su = Float.sinh (u /. n) in
+      let cu = Float.cosh (u /. n) in
+      Array.iteri buffer ~f:(fun i entry ->
+          let theta =
+            Float.pi *. ((2.0 *. Int.to_float i) +. 1.0) /. (2.0 *. n)
+          in
+          let b = Float.sin theta *. su in
+          let c = Float.cos theta *. cu in
+          let c = (b *. b) +. (c *. c) in
+          let s = a2 +. (2.0 *. a *. b) +. c in
+          entry.a <- 1.0 /. (4.0 *. s);
+          entry.d1 <- 2.0 *. (c -. a2) /. s;
+          entry.d2 <- -.(a2 -. (2.0 *. a *. b) +. c) /. s)
+
+    let epsilon_min = 0.01
+
+    let raw t ~update_buffer ~apply_buffer ~filter_order_half =
+      if filter_order_half <= 0 then
+        (* Handle the degenerate case by applying no filtering at all *)
+        Signal.sample t.signal
+      else
+        let buffer = Buffer.create filter_order_half in
+        fun ctx ->
+          let sample = Signal.sample t.signal ctx in
+          let cutoff_hz = Signal.sample t.cutoff_hz ctx in
+          let cutoff_sample_rate_ratio = cutoff_hz /. ctx.sample_rate_hz in
+          let epsilon = Signal.sample t.epsilon ctx |> Float.max epsilon_min in
+          update_buffer buffer ~cutoff_sample_rate_ratio ~epsilon;
+          let output_scaled = apply_buffer buffer sample in
+          let scale_factor = (1.0 -. Float.exp (-.epsilon)) /. 2.0 in
+          output_scaled /. scale_factor
+
+    let signal_low_pass t ~filter_order_half =
+      Signal.of_raw
+        (raw t ~update_buffer:update_buffer_low_pass
+           ~apply_buffer:Buffer.apply_low_pass ~filter_order_half)
+
+    let signal_high_pass t ~filter_order_half =
+      Signal.of_raw
+        (raw t ~update_buffer:update_buffer_high_pass
+           ~apply_buffer:Buffer.apply_high_pass ~filter_order_half)
+  end
 end
 
 module Butterworth_filter = struct
@@ -262,4 +338,15 @@ module Butterworth_filter = struct
 
   let signal_low_pass = Biquad_filter.Butterworth.signal_low_pass
   let signal_high_pass = Biquad_filter.Butterworth.signal_high_pass
+end
+
+module Chebyshev_filter = struct
+  type t = Biquad_filter.Chebyshev.t = {
+    signal : float Signal.t;
+    cutoff_hz : float Signal.t;
+    epsilon : float Signal.t;
+  }
+
+  let signal_low_pass = Biquad_filter.Chebyshev.signal_low_pass
+  let signal_high_pass = Biquad_filter.Chebyshev.signal_high_pass
 end

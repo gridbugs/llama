@@ -4,6 +4,16 @@ end
 
 module Raw = struct
   type 'a t = Ctx.t -> 'a
+
+  let with_state ~init ~f =
+    let state = ref init in
+    fun ctx ->
+      let new_state = f !state ctx in
+      state := new_state;
+      new_state
+
+  let map t ~f ctx = f (t ctx)
+  let bind t ~f ctx = f (t ctx) ctx
 end
 
 type 'a t = {
@@ -46,12 +56,20 @@ let var x =
   let ref = ref x in
   (of_ref ref, ref)
 
-module type Ops = sig
-  val of_raw : 'a Raw.t -> 'a t
-  val of_ref : 'a ref -> 'a t
-  val sample : 'a t -> Ctx.t -> 'a
-  val map : 'a t -> f:('a -> 'b) -> 'b t
-  val both : 'a t -> 'b t -> ('a * 'b) t
-  val const : 'a -> 'a t
-  val var : 'a -> 'a t * 'a ref
+module Trigger = struct
+  type nonrec t = { signal : bool t }
+
+  let of_signal signal = { signal }
+
+  let raw t =
+    let previous = ref false in
+    fun ctx ->
+      let sample = sample t.signal ctx in
+      let trigger_sample = sample && not !previous in
+      previous := sample;
+      trigger_sample
+
+  let signal t = of_raw (raw t)
 end
+
+let trigger t = Trigger.(of_signal t |> signal)

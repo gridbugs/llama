@@ -14,6 +14,7 @@
  (foreign_archives audio_io)
  (c_library_flags
   (-lpthread -lc -lm))
+ ; TODO this will currently only work on macos
  (flags
   (-ccopt
    -framework

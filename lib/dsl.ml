@@ -5,14 +5,23 @@ let silence = const 0.0
 
 type waveform = Oscillator.waveform = Sine | Saw
 
-let oscillator ~waveform ~frequency_hz =
-  Oscillator.signal { Oscillator.waveform; frequency_hz }
+let oscillator waveform frequency_hz =
+  Oscillator.(signal { waveform; frequency_hz })
 
-module type S = sig
-  val silence : float Signal.t
+let clock frequency_hz = Clock.(signal { frequency_hz })
+let amplifier signal_ ~volume = Amplifier.(signal { signal = signal_; volume })
 
-  type waveform = Oscillator.waveform = Sine | Saw
+let asr_linear ~gate ~attack_s ~release_s =
+  Asr_linear.(signal { gate; attack_s; release_s })
 
-  val oscillator :
-    waveform:waveform Signal.t -> frequency_hz:float Signal.t -> float Signal.t
-end
+type step_sequencer_step = Step_sequencer.step = {
+  value : float Signal.t;
+  period_s : float Signal.t;
+}
+
+type step_sequencer_output = Step_sequencer.output = {
+  value : float Signal.t;
+  gate : bool Signal.t;
+}
+
+let step_sequencer sequence clock = Step_sequencer.(signal { sequence; clock })

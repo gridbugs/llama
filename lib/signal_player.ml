@@ -15,7 +15,7 @@ let create ?(downsample = 1) () =
     output_stream;
     sample_index = 0;
     signal = ref (Signal.const 0.0);
-    sample_rate_hz = Int.to_float (Output_stream.sample_rate output_stream);
+    sample_rate_hz = Int.to_float (Output_stream.sample_rate_hz output_stream);
     num_channels = Output_stream.num_channels output_stream;
   }
 

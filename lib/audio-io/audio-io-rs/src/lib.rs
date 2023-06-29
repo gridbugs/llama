@@ -80,7 +80,7 @@ impl<T: SizedSample + Send + 'static> OutputStream<T> {
         })
     }
 
-    fn sample_rate(&self) -> u32 {
+    fn sample_rate_hz(&self) -> u32 {
         self.core.config.sample_rate.0 / self.downsample
     }
 
@@ -115,8 +115,8 @@ impl OutputStreamOcaml {
         }
     }
 
-    fn sample_rate(&self) -> i32 {
-        self.output_stream.sample_rate() as i32
+    fn sample_rate_hz(&self) -> i32 {
+        self.output_stream.sample_rate_hz() as i32
     }
 
     fn num_channels(&self) -> i32 {
@@ -154,9 +154,9 @@ pub fn create_output_stream_with_downsample(downsample: i32) -> ocaml::Pointer<O
 }
 
 #[ocaml::func]
-pub fn sample_rate(t: ocaml::Pointer<OutputStreamOcaml>) -> i32 {
+pub fn sample_rate_hz(t: ocaml::Pointer<OutputStreamOcaml>) -> i32 {
     let output_stream = t.as_ref();
-    output_stream.sample_rate()
+    output_stream.sample_rate_hz()
 }
 
 #[ocaml::func]

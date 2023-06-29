@@ -11,9 +11,9 @@ module Output_stream = struct
   let create_with_downsample downsample =
     create_with_downsample_32 (Int32.of_int downsample)
 
-  external sample_rate_32 : t -> int32 = "sample_rate"
+  external sample_rate_hz_32 : t -> int32 = "sample_rate_hz"
 
-  let sample_rate t = sample_rate_32 t |> Int32.to_int
+  let sample_rate_hz t = sample_rate_hz_32 t |> Int32.to_int
 
   external num_channels_32 : t -> int32 = "num_channels"
 

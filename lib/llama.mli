@@ -1,8 +1,9 @@
 module Live : sig
   val go : unit -> float Signal.t ref
 
-  include Dsl.S
-  include Signal.Ops
+  include module type of struct
+    include Dsl
+  end
 end
 
 module Dsl = Dsl

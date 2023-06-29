@@ -27,10 +27,28 @@ module Asr_linear : sig
   val signal : t -> float Signal.t
 end
 
+module Adsr_linear : sig
+  type t = {
+    gate : bool Signal.t;
+    attack_s : float Signal.t;
+    decay_s : float Signal.t;
+    sustain_01 : float Signal.t;
+    release_s : float Signal.t;
+  }
+
+  val signal : t -> float Signal.t
+end
+
 module Step_sequencer : sig
   type step = { value : float Signal.t; period_s : float Signal.t }
   type t = { sequence : step option list; clock : bool Signal.t }
   type output = { value : float Signal.t; gate : bool Signal.t }
 
   val signal : t -> output
+end
+
+module Butterworth_low_pass_filter : sig
+  type t = { signal : float Signal.t; half_power_frequency_hz : float Signal.t }
+
+  val signal : t -> filter_order_half:int -> float Signal.t
 end

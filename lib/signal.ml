@@ -56,20 +56,26 @@ let var x =
   let ref = ref x in
   (of_ref ref, ref)
 
-module Trigger = struct
-  type nonrec t = { signal : bool t }
+let trigger t =
+  of_raw
+    (let previous = ref false in
+     fun ctx ->
+       let sample = sample t ctx in
+       let trigger_sample = sample && not !previous in
+       previous := sample;
+       trigger_sample)
 
-  let of_signal signal = { signal }
+let scale s = map ~f:(fun x -> x *. s)
+let offset s = map ~f:(fun x -> x +. s)
 
-  let raw t =
-    let previous = ref false in
-    fun ctx ->
-      let sample = sample t.signal ctx in
-      let trigger_sample = sample && not !previous in
-      previous := sample;
-      trigger_sample
+let exp01 k =
+  if Float.equal k 0.0 then Fun.id
+  else
+    let b = 1.0 /. (Float.exp k -. 1.0) in
+    let a = -.(Float.log b /. k) in
+    map ~f:(fun x -> Float.exp (k *. (x -. a)) -. b)
 
-  let signal t = of_raw (raw t)
-end
-
-let trigger t = Trigger.(of_signal t |> signal)
+let debug t ~f =
+  map t ~f:(fun x ->
+      f x;
+      x)

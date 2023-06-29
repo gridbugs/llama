@@ -20,3 +20,13 @@ val both : 'a t -> 'b t -> ('a * 'b) t
 val const : 'a -> 'a t
 val var : 'a -> 'a t * 'a ref
 val trigger : bool t -> bool t
+val scale : float -> float t -> float t
+val offset : float -> float t -> float t
+
+(* The function f(x) = exp(k * (x - a)) - b
+   ...where a and b are chosen so that f(0) = 0 and f(1) = 1.
+   The k parameter controls how sharp the curve is.
+   It approaches a linear function as k approaches 0.
+   k = 0 is special cased as a linear function for convenience. *)
+val exp01 : float -> float t -> float t
+val debug : 'a t -> f:('a -> unit) -> 'a t

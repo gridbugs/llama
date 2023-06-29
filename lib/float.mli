@@ -3,5 +3,5 @@ include module type of struct
 end
 
 val clamp : t -> min:t -> max:t -> t
-val clamp01 : t -> t
-val clamp1 : t -> t
+val clamp_01 : t -> t
+val clamp_1 : t -> t

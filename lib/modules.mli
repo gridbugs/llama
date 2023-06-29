@@ -47,8 +47,9 @@ module Step_sequencer : sig
   val signal : t -> output
 end
 
-module Butterworth_low_pass_filter : sig
+module Butterworth_filter : sig
   type t = { signal : float Signal.t; half_power_frequency_hz : float Signal.t }
 
-  val signal : t -> filter_order_half:int -> float Signal.t
+  val signal_low_pass : t -> filter_order_half:int -> float Signal.t
+  val signal_high_pass : t -> filter_order_half:int -> float Signal.t
 end

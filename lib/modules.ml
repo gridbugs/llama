@@ -211,6 +211,20 @@ module Biquad_filter = struct
           entry.d1 <- 2.0 *. (1.0 -. a2) /. s;
           entry.d2 <- -.(a2 -. (2.0 *. a *. r) +. 1.0) /. s)
 
+    let update_buffer_high_pass buffer ~half_power_frequency_sample_rate_ratio =
+      let a = Float.tan (Float.pi *. half_power_frequency_sample_rate_ratio) in
+      let a2 = a *. a in
+      let n = Int.to_float (Array.length buffer) in
+      Array.iteri buffer ~f:(fun i entry ->
+          let r =
+            Float.sin
+              (Float.pi *. ((2.0 *. Int.to_float i) +. 1.0) /. (4.0 *. n))
+          in
+          let s = a2 +. (2.0 *. a *. r) +. 1.0 in
+          entry.a <- 1.0 /. s;
+          entry.d1 <- 2.0 *. (1.0 -. a2) /. s;
+          entry.d2 <- -.(a2 -. (2.0 *. a *. r) +. 1.0) /. s)
+
     let raw t ~update_buffer ~apply_buffer ~filter_order_half =
       if filter_order_half <= 0 then
         (* Handle the degenerate case by applying no filtering at all *)
@@ -232,15 +246,20 @@ module Biquad_filter = struct
       Signal.of_raw
         (raw t ~update_buffer:update_buffer_low_pass
            ~apply_buffer:Buffer.apply_low_pass ~filter_order_half)
+
+    let signal_high_pass t ~filter_order_half =
+      Signal.of_raw
+        (raw t ~update_buffer:update_buffer_high_pass
+           ~apply_buffer:Buffer.apply_high_pass ~filter_order_half)
   end
 end
 
-module Butterworth_low_pass_filter = struct
+module Butterworth_filter = struct
   type t = Biquad_filter.Butterworth.t = {
     signal : float Signal.t;
     half_power_frequency_hz : float Signal.t;
   }
 
-  let signal t ~filter_order_half =
-    Biquad_filter.Butterworth.signal_low_pass t ~filter_order_half
+  let signal_low_pass = Biquad_filter.Butterworth.signal_low_pass
+  let signal_high_pass = Biquad_filter.Butterworth.signal_high_pass
 end

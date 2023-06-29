@@ -32,3 +32,9 @@ val butterworth_low_pass_filter :
   float t ->
   half_power_frequency_hz:float t ->
   float t
+
+val butterworth_high_pass_filter :
+  ?filter_order_half:int ->
+  float t ->
+  half_power_frequency_hz:float t ->
+  float t

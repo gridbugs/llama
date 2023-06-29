@@ -41,7 +41,7 @@ let make_signal () =
       sequencer_clock
   in
   let osc = oscillator (const Saw) sequencer_freq in
-  let release_s = const 0.02 in
+  let release_s = const 0.1 in
   let filter_env =
     adsr_linear ~gate ~attack_s:(const 0.3) ~decay_s:(const 0.2)
       ~sustain_01:(const 1.0) ~release_s
@@ -51,7 +51,8 @@ let make_signal () =
   in
   let filtered_osc =
     butterworth_low_pass_filter osc
-      ~half_power_frequency_hz:(filter_env |> scale 10000.0 |> offset 0.0)
+      ~half_power_frequency_hz:(filter_env |> scale 5000.0 |> offset 100.0)
+    |> butterworth_high_pass_filter ~half_power_frequency_hz:(const 200.0)
   in
   amplifier filtered_osc
     ~volume:(asr_linear ~gate ~attack_s:(const 0.01) ~release_s)

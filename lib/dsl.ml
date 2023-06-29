@@ -31,5 +31,14 @@ let step_sequencer sequence clock = Step_sequencer.(signal { sequence; clock })
 
 let butterworth_low_pass_filter ?(filter_order_half = 1) signal_
     ~half_power_frequency_hz =
-  Butterworth_low_pass_filter.(
-    signal { signal = signal_; half_power_frequency_hz } ~filter_order_half)
+  Butterworth_filter.(
+    signal_low_pass
+      { signal = signal_; half_power_frequency_hz }
+      ~filter_order_half)
+
+let butterworth_high_pass_filter ?(filter_order_half = 1) signal_
+    ~half_power_frequency_hz =
+  Butterworth_filter.(
+    signal_high_pass
+      { signal = signal_; half_power_frequency_hz }
+      ~filter_order_half)

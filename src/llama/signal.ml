@@ -12,6 +12,13 @@ module Raw = struct
       state := new_state;
       new_state
 
+  let with_state' ~init ~f =
+    let state = ref init in
+    fun ctx ->
+      let new_state, x = f !state ctx in
+      state := new_state;
+      x
+
   let map t ~f ctx = f (t ctx)
   let bind t ~f ctx = f (t ctx) ctx
 end

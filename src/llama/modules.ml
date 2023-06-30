@@ -18,7 +18,7 @@ module Oscillator = struct
   }
 
   let signal t =
-    Raw.with_state ~init:None ~f:(fun state ctx ->
+    Raw.with_state' ~init:None ~f:(fun state ctx ->
         let state =
           match state with
           | None -> Signal.sample t.reset_offset_01 ctx
@@ -30,22 +30,19 @@ module Oscillator = struct
         let state_delta =
           Signal.sample t.frequency_hz ctx /. ctx.sample_rate_hz
         in
-        Some (Float.rem (state +. state_delta) 1.0))
-    |> Raw.bind ~f:(fun state ctx ->
-           let state =
-             match state with
-             | None -> Signal.sample t.reset_offset_01 ctx
-             | Some state -> state
-           in
-           match Signal.sample t.waveform ctx with
-           | Sine -> Float.sin (state *. Float.pi *. 2.0)
-           | Saw -> (state *. 2.0) -. 1.0
-           | Triangle -> (Float.abs ((state *. 2.0) -. 1.0) *. 2.0) -. 1.0
-           | Square ->
-               if state < Signal.sample t.square_wave_pulse_width_01 ctx then
-                 -1.0
-               else 1.0
-           | Noise -> Random.float 2.0 -. 1.0)
+        let state = Float.rem (state +. state_delta) 1.0 in
+        let x =
+          match Signal.sample t.waveform ctx with
+          | Sine -> Float.sin (state *. Float.pi *. 2.0)
+          | Saw -> (state *. 2.0) -. 1.0
+          | Triangle -> (Float.abs ((state *. 2.0) -. 1.0) *. 2.0) -. 1.0
+          | Square ->
+              if state < Signal.sample t.square_wave_pulse_width_01 ctx then
+                -1.0
+              else 1.0
+          | Noise -> Random.float 2.0 -. 1.0
+        in
+        (Some state, x))
     |> Signal.of_raw
 end
 
@@ -103,31 +100,38 @@ module Adsr_linear = struct
   type state = { current_value : float; crossed_threshold : bool }
 
   let signal t =
-    Raw.with_state ~init:{ current_value = 0.0; crossed_threshold = false }
+    Raw.with_state' ~init:{ current_value = 0.0; crossed_threshold = false }
       ~f:(fun state ctx ->
-        if Signal.sample t.gate ctx then
-          if state.crossed_threshold then
-            (* decay and sustain *)
-            let decay_s = Signal.sample t.decay_s ctx in
-            let sustain_01 = Signal.sample t.sustain_01 ctx in
-            let delta = 1.0 /. (decay_s *. ctx.sample_rate_hz) in
-            let current_value =
-              state.current_value -. delta |> Float.max sustain_01
-            in
-            { state with current_value }
+        let state =
+          if Signal.sample t.gate ctx then
+            if state.crossed_threshold then
+              (* decay and sustain *)
+              let decay_s = Signal.sample t.decay_s ctx in
+              let sustain_01 = Signal.sample t.sustain_01 ctx in
+              let delta = 1.0 /. (decay_s *. ctx.sample_rate_hz) in
+              let current_value =
+                state.current_value -. delta |> Float.max sustain_01
+              in
+              { state with current_value }
+            else
+              (* attack *)
+              let attack_s = Signal.sample t.attack_s ctx in
+              let delta = 1.0 /. (attack_s *. ctx.sample_rate_hz) in
+              let current_value =
+                state.current_value +. delta |> Float.min 1.0
+              in
+              {
+                current_value;
+                crossed_threshold = Float.equal current_value 1.0;
+              }
           else
-            (* attack *)
-            let attack_s = Signal.sample t.attack_s ctx in
-            let delta = 1.0 /. (attack_s *. ctx.sample_rate_hz) in
-            let current_value = state.current_value +. delta |> Float.min 1.0 in
-            { current_value; crossed_threshold = Float.equal current_value 1.0 }
-        else
-          (* release *)
-          let release_s = Signal.sample t.release_s ctx in
-          let delta = 1.0 /. (release_s *. ctx.sample_rate_hz) in
-          let current_value = state.current_value -. delta |> Float.max 0.0 in
-          { current_value; crossed_threshold = false })
-    |> Raw.map ~f:(fun { current_value; _ } -> current_value)
+            (* release *)
+            let release_s = Signal.sample t.release_s ctx in
+            let delta = 1.0 /. (release_s *. ctx.sample_rate_hz) in
+            let current_value = state.current_value -. delta |> Float.max 0.0 in
+            { current_value; crossed_threshold = false }
+        in
+        (state, state.current_value))
     |> Signal.of_raw
 end
 
@@ -155,31 +159,32 @@ module Step_sequencer = struct
   let signal t =
     let sequence_array = Array.of_list t.sequence in
     let combined =
-      Raw.with_state ~init:(init_state t) ~f:(fun state ctx ->
+      Raw.with_state' ~init:(init_state t) ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
-          if Signal.sample t.clock ctx then
-            let step_index =
-              (state.step_index + 1) mod Array.length sequence_array
-            in
-            let gate_remain_s, current_value =
-              match Array.get sequence_array step_index with
-              | Some current_step ->
-                  let gate_remain_s =
-                    Signal.sample current_step.period_s ctx
-                    -. gate_remain_s_delta
-                  in
-                  let current_value = Signal.sample current_step.value ctx in
-                  (gate_remain_s, current_value)
-              | None -> (0.0, state.current_value)
-            in
-            { step_index; gate_remain_s; current_value }
-          else
-            {
-              state with
-              gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
-            })
-      |> Raw.map ~f:(fun { current_value; gate_remain_s; _ } ->
-             (current_value, gate_remain_s > 0.0))
+          let state =
+            if Signal.sample t.clock ctx then
+              let step_index =
+                (state.step_index + 1) mod Array.length sequence_array
+              in
+              let gate_remain_s, current_value =
+                match Array.get sequence_array step_index with
+                | Some current_step ->
+                    let gate_remain_s =
+                      Signal.sample current_step.period_s ctx
+                      -. gate_remain_s_delta
+                    in
+                    let current_value = Signal.sample current_step.value ctx in
+                    (gate_remain_s, current_value)
+                | None -> (0.0, state.current_value)
+              in
+              { step_index; gate_remain_s; current_value }
+            else
+              {
+                state with
+                gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
+              }
+          in
+          (state, (state.current_value, state.gate_remain_s > 0.0)))
       |> Signal.of_raw
     in
     {
@@ -200,25 +205,26 @@ module Random_sequencer = struct
   let signal t =
     let value_array = Array.of_list t.values in
     let combined =
-      Raw.with_state ~init:{ gate_remain_s = 0.0; current_value = 0.0 }
+      Raw.with_state' ~init:{ gate_remain_s = 0.0; current_value = 0.0 }
         ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
-          if Signal.sample t.clock ctx then
-            let index = Random.int (Array.length value_array) in
-            let current_value =
-              Signal.sample (Array.get value_array index) ctx
-            in
-            let gate_remain_s =
-              Signal.sample t.period ctx -. gate_remain_s_delta
-            in
-            { current_value; gate_remain_s }
-          else
-            {
-              state with
-              gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
-            })
-      |> Raw.map ~f:(fun { current_value; gate_remain_s; _ } ->
-             (current_value, gate_remain_s > 0.0))
+          let state =
+            if Signal.sample t.clock ctx then
+              let index = Random.int (Array.length value_array) in
+              let current_value =
+                Signal.sample (Array.get value_array index) ctx
+              in
+              let gate_remain_s =
+                Signal.sample t.period ctx -. gate_remain_s_delta
+              in
+              { current_value; gate_remain_s }
+            else
+              {
+                state with
+                gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
+              }
+          in
+          (state, (state.current_value, state.gate_remain_s > 0.0)))
       |> Signal.of_raw
     in
     {
@@ -255,5 +261,21 @@ module Sample_and_hold = struct
     Raw.with_state ~init:0.0 ~f:(fun state ctx ->
         if Signal.sample t.trigger ctx then Signal.sample t.signal ctx
         else state)
+    |> Signal.of_raw
+end
+
+module Sample_player_mono = struct
+  type t = { data : float array; trigger : bool Signal.t }
+
+  let signal t =
+    Raw.with_state' ~init:(Array.length t.data) ~f:(fun index ctx ->
+        if Signal.sample t.trigger ctx then (0, 0.0)
+        else
+          (* deliberately allow index to be 1 out of bounds to indicate that the sample is finished *)
+          let sample =
+            if index < Array.length t.data then Array.get t.data index else 0.0
+          in
+          let index = Int.min (index + 1) (Array.length t.data) in
+          (index, sample))
     |> Signal.of_raw
 end

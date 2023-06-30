@@ -2,7 +2,12 @@ use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     Device, OutputCallbackInfo, SizedSample, Stream, StreamConfig,
 };
-use std::sync::{mpsc, Arc, RwLock};
+use hound::WavReader;
+use std::{
+    fs::File,
+    io::BufReader,
+    sync::{mpsc, Arc, RwLock},
+};
 
 struct OutputStreamCore {
     device: Device,
@@ -188,4 +193,23 @@ pub fn samples_behind(t: ocaml::Pointer<OutputStreamOcaml>) -> i32 {
 pub fn send_sample(mut t: ocaml::Pointer<OutputStreamOcaml>, sample: f32) {
     let output_stream = t.as_mut();
     output_stream.send_sample(sample);
+}
+
+#[ocaml::func]
+pub fn read_wav_file_mono(path: String) -> Vec<f32> {
+    let mut reader = WavReader::new(BufReader::new(File::open(path).unwrap())).unwrap();
+    let spec = reader.spec();
+    let max_value = (1 << (spec.bits_per_sample - 1)) as i64;
+    let data_int = reader
+        .samples::<i32>()
+        .map(|x| x.unwrap())
+        .collect::<Vec<_>>();
+    let data_f32 = data_int
+        .chunks(spec.channels as usize)
+        .map(|chunk| {
+            let channel_mean = chunk.iter().map(|&x| x as i64).sum::<i64>() / chunk.len() as i64;
+            (channel_mean as f64 / max_value as f64) as f32
+        })
+        .collect::<Vec<_>>();
+    data_f32
 }

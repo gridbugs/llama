@@ -1,5 +1,24 @@
 module System = struct
-  external env_logger_init : unit -> unit = "env_logger_init"
+  external env_logger_init_raw : unit -> unit = "env_logger_init"
+
+  let is_initialized = ref false
+
+  let env_logger_init () =
+    if not !is_initialized then (
+      is_initialized := true;
+      env_logger_init_raw ())
+end
+
+module Wav = struct
+  external read_wav_file_mono_exn_raw : string -> float array
+    = "read_wav_file_mono"
+
+  let read_wav_file_mono_exn path =
+    (* TODO: This array can't be indexed with [Array.get] but values can be
+       obtained with (say) [Array.iter]. This is possibly a bug in the ocaml
+       rust bindings for the [float array] special case. *)
+    let broken_array = read_wav_file_mono_exn_raw path in
+    Array.of_list (Array.to_list broken_array)
 end
 
 module Output_stream = struct

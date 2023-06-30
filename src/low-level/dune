@@ -1,17 +1,17 @@
 (rule
- (target libaudio_io.a)
+ (target liblow_level.a)
  (deps
-  (source_tree audio-io-rs))
+  (source_tree low-level-rust))
  (action
   (progn
-   (run cargo build --manifest-path=audio-io-rs/Cargo.toml --release)
-   (run mv audio-io-rs/target/release/%{target} %{target}))))
+   (run cargo build --manifest-path=low-level-rust/Cargo.toml --release)
+   (run mv low-level-rust/target/release/%{target} %{target}))))
 
 (library
- (name audio_io)
- (public_name llama.audio_io)
+ (name llama_low_level)
+ (public_name llama.low_level)
  (no_dynlink)
- (foreign_archives audio_io)
+ (foreign_archives low_level)
  (c_library_flags
   (-lpthread -lc -lm))
  ; TODO this will currently only work on macos

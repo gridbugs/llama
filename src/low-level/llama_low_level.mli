@@ -2,6 +2,10 @@ module System : sig
   val env_logger_init : unit -> unit
 end
 
+module Wav : sig
+  val read_wav_file_mono_exn : string -> float array
+end
+
 module Output_stream : sig
   type t
 

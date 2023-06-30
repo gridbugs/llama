@@ -90,3 +90,9 @@ module Sample_and_hold : sig
 
   val signal : t -> float Signal.t
 end
+
+module Sample_player_mono : sig
+  type t = { data : float array; trigger : bool Signal.t }
+
+  val signal : t -> float Signal.t
+end

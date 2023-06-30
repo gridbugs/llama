@@ -5,7 +5,8 @@ end
 module Raw : sig
   type 'a t = Ctx.t -> 'a
 
-  val with_state : init:'a -> f:('a -> 'a t) -> 'a t
+  val with_state : init:'state -> f:('state -> 'state t) -> 'state t
+  val with_state' : init:'state -> f:('state -> ('state * 'a) t) -> 'a t
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val bind : 'a t -> f:('a -> 'b t) -> 'b t
 end

@@ -1,5 +1,5 @@
 [package]
-name = "audio_io"
+name = "low_level"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,5 +13,6 @@ crate-type = ["staticlib"]
 anyhow = "1.0"
 cpal = "0.15"
 env_logger = "0.10"
+hound = "3.5"
 log = "0.4"
 ocaml = "0.22"

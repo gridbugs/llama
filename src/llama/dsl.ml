@@ -84,3 +84,6 @@ let chebyshev_high_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
 
 let sample_and_hold signal_ trigger =
   Sample_and_hold.(signal { signal = signal_; trigger })
+
+let sample_player_mono data trigger =
+  Sample_player_mono.(signal { data; trigger })

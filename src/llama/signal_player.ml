@@ -1,5 +1,5 @@
-module Output_stream = Audio_io.Output_stream
 module Ctx = Signal.Ctx
+module Output_stream = Llama_low_level.Output_stream
 
 type t = {
   output_stream : Output_stream.t;

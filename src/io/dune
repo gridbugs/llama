@@ -1,4 +1,4 @@
 (library
  (name llama_io)
  (public_name llama.io)
- (libraries llama mm))
+ (libraries llama llama.low_level))

@@ -6,9 +6,9 @@
 
 `llama` is a library for building software-defined modular synthesizers in a
 declarative style. It can be used to implement programs that generate audio
-using components that should be familiar to anyone who has played with a
-synthesizer before. It can also be used from `utop` or other ocaml repl
-environments to perform music live.
+using components commonly found in synthesizers such as oscillators, envelope
+generators, and low/high pass filters. It can also be used from `utop` or other
+ocaml repl environments to perform music live.
 
 ## Llama in Action
 
@@ -27,7 +27,6 @@ written in rust because rust has really good libraries for wav decoding
 Then you should be able to build and some example programs:
 ```
 $ dune exec ./examples/polyphonic_events.exe
-
 $ dune exec ./examples/random_pentatonic.exe
 ```
 

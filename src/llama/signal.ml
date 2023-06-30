@@ -78,7 +78,7 @@ let trigger t =
 let scale s = map ~f:(fun x -> x *. s)
 let offset s = map ~f:(fun x -> x +. s)
 
-let exp01 k =
+let exp_01 k =
   if Float.equal k 0.0 then Fun.id
   else
     let b = 1.0 /. (Float.exp k -. 1.0) in

@@ -1,9 +1,9 @@
 (* Example that plays random notes from the pentatonic scale with several
    filters and effects applied. If you pass the paths of 3 wav files they will
-   be interpreted as samples of a cymbol, snare, and bass respectively, and an
+   be interpreted as samples of a cymbal, snare, and bass respectively, and an
    additional drum track will be played.
 
-   E.g.:  dune exec ./examples/random_pentatonic.exe -- cymbol.wav snare.wav bass.wav
+   E.g.:  dune exec ./examples/random_pentatonic.exe -- cymbal.wav snare.wav bass.wav
 *)
 
 open Llama
@@ -41,7 +41,7 @@ let pentatonic_overdrive ~sequencer_clock ~effect_clock =
   let filter_env =
     adsr_linear ~gate ~attack_s:(const 0.1) ~decay_s:(const 0.1)
       ~sustain_01:(const 1.0) ~release_s
-    |> exp01 1.0
+    |> exp_01 1.0
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~epsilon:(const 10.0)
@@ -64,7 +64,7 @@ let drum_machine ~cymbal:cymbal_p ~snare:snare_p ~bass:bass_p clock =
       0;
       snare lor cymbal;
       0;
-      0;
+      snare;
       snare lor bass;
       snare lor cymbal;
       0;
@@ -95,16 +95,15 @@ let pentatonic_strings ~sequencer_clock =
   let release_s = const 0.4 in
   let filter_env =
     adsr_linear ~gate ~attack_s:(const 0.01) ~decay_s:(const 0.2)
-      ~sustain_01:(const 1.0) ~release_s
-    |> exp01 4.0
+      ~sustain_01:(const 0.0) ~release_s
+    |> exp_01 4.0
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
-      ~cutoff_hz:(filter_env |> scale 500.0 |> offset 0.0)
-    |> chebyshev_high_pass_filter ~epsilon:(const 1.0) ~cutoff_hz:(const 0.0)
+      ~cutoff_hz:(filter_env |> scale 4000.0 |> offset 0.0)
   in
   filtered_osc
-  *.. (asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp01 1.0)
+  *.. (asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0)
   |> map ~f:(fun x -> Float.clamp_1 (x *. 1.0))
 
 let play_possibly_with_drums wav_players which =
@@ -122,9 +121,10 @@ let play_possibly_with_drums wav_players which =
   match which with
   | `Overdrive ->
       drum_machine (clock |> clock_divider 4)
-      +.. pentatonic_overdrive
-            ~sequencer_clock:(clock |> clock_divider 8)
-            ~effect_clock:(clock |> clock_divider 2)
+      +.. (pentatonic_overdrive
+             ~sequencer_clock:(clock |> clock_divider 8)
+             ~effect_clock:(clock |> clock_divider 2)
+          |> scale 0.4)
   | `Strings ->
       drum_machine (clock |> clock_divider 4)
       +.. pentatonic_strings ~sequencer_clock:(clock |> clock_divider 2)

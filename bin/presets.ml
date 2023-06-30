@@ -28,7 +28,7 @@ let pentatonic_strings ~sequencer_clock ~effect_clock:_ =
   let filter_env =
     adsr_linear ~gate ~attack_s:(const 0.01) ~decay_s:(const 0.2)
       ~sustain_01:(const 1.0) ~release_s
-    |> exp01 4.0
+    |> exp_01 4.0
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
@@ -36,7 +36,7 @@ let pentatonic_strings ~sequencer_clock ~effect_clock:_ =
     |> chebyshev_high_pass_filter ~epsilon:(const 1.0) ~cutoff_hz:(const 0.0)
   in
   filtered_osc
-  *.. (asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp01 1.0)
+  *.. (asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0)
   |> map ~f:(fun x -> Float.clamp_1 (x *. 1.0))
 
 let pentatonic_overdrive ~sequencer_clock ~effect_clock =
@@ -64,7 +64,7 @@ let pentatonic_overdrive ~sequencer_clock ~effect_clock =
   let filter_env =
     adsr_linear ~gate ~attack_s:(const 0.1) ~decay_s:(const 0.1)
       ~sustain_01:(const 1.0) ~release_s
-    |> exp01 1.0
+    |> exp_01 1.0
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~epsilon:(const 10.0)

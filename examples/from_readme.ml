@@ -1,3 +1,9 @@
+(* This is a complete example. Paste this into a file and run it to see what
+   it does, or just run:
+
+   $ dune exec ./examples/from_readme.exe
+*)
+
 open Llama
 open Dsl
 
@@ -22,7 +28,9 @@ let note_clock : bool Signal.t =
 let envelope : float Signal.t =
   asr_linear ~gate:note_clock ~attack_s:(const 0.01) ~release_s:(const 0.2)
 
-(* Finally, multiply the oscillator with the envelope to produce a repeating
-   burst of volume which slowly tapers off twice per second *)
+(* Multiply the oscillator with the envelope to produce a repeating
+   burst of volume which gradually tapers off twice per second. *)
 let output : float Signal.t = osc *.. envelope
-let () = play_signal output
+
+(* Play the sound! *)
+let () = play_signal (output |> scale 0.1)

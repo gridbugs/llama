@@ -13,7 +13,37 @@ module Note_name = struct
     | `A_sharp
     | `B ]
 
-  let index = function
+  let to_string = function
+    | `C -> "C"
+    | `C_sharp -> "C_sharp"
+    | `D -> "D"
+    | `D_sharp -> "D_sharp"
+    | `E -> "E"
+    | `F -> "F"
+    | `F_sharp -> "F_sharp"
+    | `G -> "G"
+    | `G_sharp -> "G_sharp"
+    | `A -> "A"
+    | `A_sharp -> "A_sharp"
+    | `B -> "B"
+
+  let all_index_order =
+    [
+      `C;
+      `C_sharp;
+      `D;
+      `D_sharp;
+      `E;
+      `F;
+      `F_sharp;
+      `G;
+      `G_sharp;
+      `A;
+      `A_sharp;
+      `B;
+    ]
+
+  let to_index = function
     | `C -> 0
     | `C_sharp -> 1
     | `D -> 2
@@ -41,7 +71,14 @@ module Note = struct
   type t = Note_name.t * int
 
   let to_midi_index (note_name, octave) =
-    (octave * notes_per_octave) + Note_name.index note_name
+    (octave * notes_per_octave) + Note_name.to_index note_name
 
   let frequency_hz t = frequency_hz_of_midi_index (to_midi_index t)
+
+  let of_midi_index i =
+    let note_name =
+      List.nth Note_name.all_index_order (i mod notes_per_octave)
+    in
+    let octave = i / notes_per_octave in
+    (note_name, octave)
 end

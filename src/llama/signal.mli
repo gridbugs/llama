@@ -26,7 +26,7 @@ val trigger : bool t -> bool t
 val scale : float -> float t -> float t
 val offset : float -> float t -> float t
 
-val exp01 : float -> float t -> float t
+val exp_01 : float -> float t -> float t
 (** The function f(x) = exp(k * (x - a)) - b
    ...where a and b are chosen so that f(0) = 0 and f(1) = 1.
    The k parameter controls how sharp the curve is.

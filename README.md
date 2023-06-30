@@ -18,9 +18,11 @@ written in rust because rust has really good libraries for wav decoding
 ([hound](https://crates.io/crates/hound)) and sound card interaction
 ([cpal](https://crates.io/crates/cpal)).
 
-Then you should be able to build and run an example program with:
+Then you should be able to build and some example programs:
 ```
-dune exec ./examples/polyphonic_events.exe
+$ dune exec ./examples/polyphonic_events.exe
+
+$ dune exec ./examples/random_pentatonic.exe
 ```
 
 ## Concepts

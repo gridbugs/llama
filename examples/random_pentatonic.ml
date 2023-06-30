@@ -18,7 +18,6 @@ let random_pentatonic_sequencer octave period clock =
   random_sequencer random_sequencer_values (const period) clock
 
 let pentatonic_overdrive ~sequencer_clock ~effect_clock =
-  let _sequencer_clock = effect_clock |> clock_divider 4 in
   let noise = noise_01 () in
   let sah_noise = sample_and_hold noise effect_clock in
   let { value = sequencer_freq; gate } =

@@ -55,19 +55,15 @@ module Clock = struct
     |> Signal.of_raw |> Signal.trigger
 end
 
-module Amplifier = struct
-  type t = { signal : float Signal.t; volume : float Signal.t }
+module Clock_divider = struct
+  type t = { clock : bool Signal.t; denominator : int }
 
-  (* As an optimization, if the volume is less than this value, the signal is
-     not evaluated. *)
-  let threshold = 1.0 /. 256.0
-
-  let raw t ctx =
-    let volume = Signal.sample t.volume ctx in
-    if Float.abs volume > threshold then Signal.sample t.signal ctx *. volume
-    else 0.0
-
-  let signal t = Signal.of_raw (raw t)
+  let signal t =
+    Raw.with_state' ~init:0 ~f:(fun state ctx ->
+        if Signal.sample t.clock ctx then
+          if state > 0 then (state - 1, false) else (t.denominator - 1, true)
+        else (state, false))
+    |> Signal.of_raw
 end
 
 module Asr_linear = struct
@@ -278,4 +274,30 @@ module Sample_player_mono = struct
           let index = Int.min (index + 1) (Array.length t.data) in
           (index, sample))
     |> Signal.of_raw
+end
+
+module Bitwise_trigger_sequencer = struct
+  type t = {
+    num_channels : int;
+    sequence : int Signal.t list;
+    clock : bool Signal.t;
+  }
+
+  let signals t =
+    let sequence_array = Array.of_list t.sequence in
+    let bitfield_signal =
+      Raw.with_state'
+        ~init:(Array.length sequence_array - 1)
+        ~f:(fun index ctx ->
+          if Signal.sample t.clock ctx then
+            let index = (index + 1) mod Array.length sequence_array in
+            let signal = Array.get sequence_array index in
+            let output_bits = Signal.sample signal ctx in
+            (index, output_bits)
+          else (index, 0))
+      |> Signal.of_raw
+    in
+    List.init ~len:t.num_channels ~f:(fun i ->
+        Signal.map bitfield_signal ~f:(fun bits ->
+            not (Int.equal (bits land (1 lsl i)) 0)))
 end

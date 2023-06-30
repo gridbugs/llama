@@ -35,7 +35,9 @@ let low_frequency_oscillator_01 ?(square_wave_pulse_width_01 = const 0.5)
   |> to_01
 
 let clock frequency_hz = Clock.(signal { frequency_hz })
-let amplifier signal_ ~volume = Amplifier.(signal { signal = signal_; volume })
+
+let clock_divider denominator clock =
+  Clock_divider.(signal { clock; denominator })
 
 let asr_linear ~gate ~attack_s ~release_s =
   Asr_linear.(signal { gate; attack_s; release_s })
@@ -87,3 +89,6 @@ let sample_and_hold signal_ trigger =
 
 let sample_player_mono data trigger =
   Sample_player_mono.(signal { data; trigger })
+
+let bitwise_trigger_sequencer num_channels sequence clock =
+  Bitwise_trigger_sequencer.(signals { num_channels; sequence; clock })

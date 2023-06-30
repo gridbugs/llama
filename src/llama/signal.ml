@@ -104,3 +104,7 @@ let add a b = both a b |> map ~f:(fun (a, b) -> a +. b)
 let ( +.. ) a b = add a b
 let mul a b = both a b |> map ~f:(fun (a, b) -> a *. b)
 let ( *.. ) a b = mul a b
+let sub a b = both a b |> map ~f:(fun (a, b) -> a -. b)
+let ( -.. ) a b = sub a b
+let div a b = both a b |> map ~f:(fun (a, b) -> a /. b)
+let ( /.. ) a b = div a b

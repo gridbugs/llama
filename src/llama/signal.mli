@@ -44,3 +44,7 @@ val add : float t -> float t -> float t
 val ( +.. ) : float t -> float t -> float t
 val mul : float t -> float t -> float t
 val ( *.. ) : float t -> float t -> float t
+val sub : float t -> float t -> float t
+val ( -.. ) : float t -> float t -> float t
+val div : float t -> float t -> float t
+val ( /.. ) : float t -> float t -> float t

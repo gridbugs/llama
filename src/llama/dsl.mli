@@ -28,7 +28,7 @@ val low_frequency_oscillator_01 :
   float t
 
 val clock : float t -> bool t
-val amplifier : float t -> volume:float t -> float t
+val clock_divider : int -> bool t -> bool t
 val asr_linear : gate:bool t -> attack_s:float t -> release_s:float t -> float t
 
 val adsr_linear :
@@ -75,3 +75,4 @@ val chebyshev_high_pass_filter :
 
 val sample_and_hold : float t -> bool t -> float t
 val sample_player_mono : float array -> bool t -> float t
+val bitwise_trigger_sequencer : int -> int t list -> bool t -> bool t list

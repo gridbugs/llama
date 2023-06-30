@@ -18,10 +18,10 @@ module Clock : sig
   val signal : t -> bool Signal.t
 end
 
-module Amplifier : sig
-  type t = { signal : float Signal.t; volume : float Signal.t }
+module Clock_divider : sig
+  type t = { clock : bool Signal.t; denominator : int }
 
-  val signal : t -> float Signal.t
+  val signal : t -> bool Signal.t
 end
 
 module Asr_linear : sig
@@ -95,4 +95,14 @@ module Sample_player_mono : sig
   type t = { data : float array; trigger : bool Signal.t }
 
   val signal : t -> float Signal.t
+end
+
+module Bitwise_trigger_sequencer : sig
+  type t = {
+    num_channels : int;
+    sequence : int Signal.t list;
+    clock : bool Signal.t;
+  }
+
+  val signals : t -> bool Signal.t list
 end

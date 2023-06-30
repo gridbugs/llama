@@ -10,6 +10,12 @@ using components that should be familiar to anyone who has played with a
 synthesizer before. It can also be used from `utop` or other ocaml repl
 environments to perform music live.
 
+## Llama in Action
+
+Here are some videos showing off some of the example programs:
+- [polyphonic_events](https://youtu.be/o-XPH1j0NqE)
+- [random_pentatonic](https://youtu.be/wfmmdRo_ytU)
+
 ## Getting Started
 
 You will need to [install rust](https://rustup.rs/) to build the low level

@@ -140,7 +140,7 @@ module Chebyshev = struct
         entry.d1 <- 2.0 *. (c -. a2) /. s;
         entry.d2 <- -.(a2 -. (2.0 *. a *. b) +. c) /. s)
 
-  let epsilon_min = 0.01
+  let epsilon_min = 0.000000001
 
   let raw t ~update_buffer ~apply_buffer ~filter_order_half =
     if filter_order_half <= 0 then

@@ -6,6 +6,8 @@ module Live : sig
   end
 end
 
+val play_signal : ?downsample:int -> float Signal.t -> unit
+
 module Dsl = Dsl
 module Signal_player = Signal_player
 module Signal = Signal

@@ -19,3 +19,5 @@ module Note : sig
 
   val frequency_hz : t -> float
 end
+
+val frequency_hz_of_midi_index : int -> float

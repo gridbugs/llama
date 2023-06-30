@@ -76,3 +76,6 @@ val chebyshev_high_pass_filter :
 val sample_and_hold : float t -> bool t -> float t
 val sample_player_mono : float array -> bool t -> float t
 val bitwise_trigger_sequencer : int -> int t list -> bool t -> bool t list
+val delay : 'a t -> time_s:float t -> fill:'a -> 'a t
+val clock_delay : float -> bool t -> bool t
+val pulse : frequency_hz:float t -> duty_01:float t -> bool t

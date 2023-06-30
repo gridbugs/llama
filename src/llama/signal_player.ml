@@ -9,12 +9,12 @@ type t = {
   num_channels : int;
 }
 
-let create ?(downsample = 1) () =
+let create ?(downsample = 1) ?(initial_signal = Signal.silence) () =
   let output_stream = Output_stream.create_with_downsample downsample in
   {
     output_stream;
     sample_index = 0;
-    signal = ref (Signal.const 0.0);
+    signal = ref initial_signal;
     sample_rate_hz = Int.to_float (Output_stream.sample_rate_hz output_stream);
     num_channels = Output_stream.num_channels output_stream;
   }

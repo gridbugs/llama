@@ -301,3 +301,26 @@ module Bitwise_trigger_sequencer = struct
         Signal.map bitfield_signal ~f:(fun bits ->
             not (Int.equal (bits land (1 lsl i)) 0)))
 end
+
+module Delay = struct
+  type 'a t = { signal : 'a Signal.t; time_s : float Signal.t; fill : 'a }
+
+  let raw t =
+    let queue = Queue.create () in
+    fun ctx ->
+      let target_size =
+        Float.to_int (Signal.sample t.time_s ctx *. ctx.sample_rate_hz)
+      in
+      let current_size = Queue.length queue in
+      if current_size < target_size then (
+        let sample = Signal.sample t.signal ctx in
+        Queue.add sample queue;
+        t.fill)
+      else (
+        (if Int.equal current_size target_size || Queue.is_empty queue then
+         let sample = Signal.sample t.signal ctx in
+         Queue.add sample queue);
+        Queue.take queue)
+
+  let signal t = Signal.of_raw (raw t)
+end

@@ -14,7 +14,10 @@ let pentatonic_strings ~sequencer_clock ~effect_clock:_ =
   let { value = sequencer_freq; gate } =
     random_pentatonic_sequencer 3 0.1 sequencer_clock
   in
-  let osc_freq = sequencer_freq in
+  let osc_freq =
+    sequencer_freq
+    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 17.0)
+  in
   let osc =
     mean
       [
@@ -28,7 +31,7 @@ let pentatonic_strings ~sequencer_clock ~effect_clock:_ =
     |> exp01 4.0
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 0.01)
+    chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
       ~cutoff_hz:(filter_env |> scale 500.0 |> offset 0.0)
     |> chebyshev_high_pass_filter ~epsilon:(const 1.0) ~cutoff_hz:(const 0.0)
   in

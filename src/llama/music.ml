@@ -28,19 +28,20 @@ module Note_name = struct
     | `B -> 11
 end
 
+let a4_frequency = 440.0
+let a4_index = 57
+let notes_per_octave = 12
+
+let frequency_hz_of_midi_index index =
+  a4_frequency
+  *. Float.pow 2.0
+       (Int.to_float (index - a4_index) /. Int.to_float notes_per_octave)
+
 module Note = struct
   type t = Note_name.t * int
 
-  let a4_frequency = 440.0
-  let a4_index = 57
-  let notes_per_octave = 12
+  let to_midi_index (note_name, octave) =
+    (octave * notes_per_octave) + Note_name.index note_name
 
-  let frequency_hz_of_note_index index =
-    a4_frequency
-    *. Float.pow 2.0
-         (Int.to_float (index - a4_index) /. Int.to_float notes_per_octave)
-
-  let frequency_hz (note_name, octave) =
-    let note_index = (octave * notes_per_octave) + Note_name.index note_name in
-    frequency_hz_of_note_index note_index
+  let frequency_hz t = frequency_hz_of_midi_index (to_midi_index t)
 end

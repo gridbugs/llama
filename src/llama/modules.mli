@@ -106,3 +106,9 @@ module Bitwise_trigger_sequencer : sig
 
   val signals : t -> bool Signal.t list
 end
+
+module Delay : sig
+  type 'a t = { signal : 'a Signal.t; time_s : float Signal.t; fill : 'a }
+
+  val signal : 'a t -> 'a Signal.t
+end

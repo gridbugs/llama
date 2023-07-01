@@ -13,8 +13,10 @@
  (synopsis "Language for Live Audio Module Arrangement")
  (depends
 
-  ; the ocaml-boxroot-sys-0.2.0 crate doesn't build with ocaml 5
+  ; The ocaml-boxroot-sys-0.2.0 crate doesn't build with ocaml 5.
   (ocaml (< "5.0.0"))
+
+  (lwt (>= 5.4))
 
   ; Many rust users never install rust with their system package manager and
   ; instead use the rustup tool to manage rust installations. Thus we want to
@@ -28,7 +30,6 @@
   ; repo can manage their own rust installation.
   ; conf-rust-2021
 
-  ; On linux, "alsa" is a dependency of the rust package "cpal".
-  (conf-alsa (= :os linux))
-
-  (lwt (>= 5.6))))
+  ; On linux, "alsa" is a dependency of the rust package "cpal" and we can use
+  ; opam to install it for us.
+  (conf-alsa (= :os linux))))

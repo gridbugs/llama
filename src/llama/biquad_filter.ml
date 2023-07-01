@@ -140,6 +140,9 @@ module Chebyshev = struct
         entry.d1 <- 2.0 *. (c -. a2) /. s;
         entry.d2 <- -.(a2 -. (2.0 *. a *. b) +. c) /. s)
 
+  (* Arbitrary small constant below which you don't hear much difference. We
+     have this to protect against the case where epsilon is set to 0 which
+     would otherwise result in silence. *)
   let epsilon_min = 0.000000001
 
   let raw t ~update_buffer ~apply_buffer ~filter_order_half =

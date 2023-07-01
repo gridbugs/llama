@@ -37,11 +37,40 @@ let () =
   let env'd_osc = filtered_osc *.. envelope in
   let echo_effect signal =
     signal |> scale 0.5
-    |> chebyshev_low_pass_filter ~epsilon:(const 0.2) ~cutoff_hz:(const 3000.0)
+    |> chebyshev_low_pass_filter ~epsilon:(const 0.8) ~cutoff_hz:(const 2000.0)
+  in
+  let track =
+    env'd_osc
+    |> echo ~f:echo_effect ~delay_s:(const 0.3)
+    |> echo ~f:echo_effect ~delay_s:(const 0.7)
+    |> echo ~f:echo_effect ~delay_s:(const 1.1)
+    |> echo ~f:(scale 0.9) ~delay_s:(const 10.0)
+    |> echo ~f:(scale 0.9) ~delay_s:(const 20.0)
+    |> echo ~f:(scale 0.9) ~delay_s:(const 30.0)
+  in
+  let mk_track_envelope ~fade_out_start ~fade_out_duration =
+    Raw.with_state' ~init:0.0 ~f:(fun time_s (ctx : Ctx.t) ->
+        let time_s = time_s +. (1.0 /. ctx.sample_rate_hz) in
+        let since_fade = time_s -. fade_out_start in
+        let value =
+          if since_fade > 0.0 then
+            Float.max (fade_out_duration -. since_fade) 0.0 /. fade_out_duration
+          else 1.0
+        in
+        (time_s, value))
+    |> Signal.of_raw |> exp_01 2.0
+  in
+  let track_envelope =
+    mk_track_envelope ~fade_out_start:60.0 ~fade_out_duration:20.0
   in
   let output =
-    echo ~f:echo_effect ~delay_s:(const 0.7) env'd_osc
-    |> echo ~f:echo_effect ~delay_s:(const 1.1)
-    |> echo ~f:echo_effect ~delay_s:(const 0.3)
+    butterworth_low_pass_filter track
+      ~half_power_frequency_hz:(track_envelope |> scale 3000.0)
+    |> butterworth_high_pass_filter ~half_power_frequency_hz:(const 600.0)
   in
-  play_signal (output |> scale 0.3)
+  let output =
+    output
+    +.. (scale 0.5 env'd_osc *.. (const 1.0 -.. track_envelope)
+        |> echo ~f:(scale 0.5) ~delay_s:(const 0.3))
+  in
+  play_signal (output |> scale 0.1)

@@ -16,7 +16,7 @@ let osc : float Signal.t = oscillator (const Sine) (const 440.0)
    time on. This is often used to communicate the fact that a key is pressed to
    a module that responds to such events. *)
 let note_clock : bool Signal.t =
-  pulse ~frequency_hz:(const 2.0) ~duty_01:(const 0.5)
+  pulse ~frequency_hz:(const 2.0) ~duty_01:(const 0.3)
 
 (* [envelope] is a signal which is 0 while its [gate] argument is producing
    [false] values, but which raises to 1 over the course of [attack_s] seconds

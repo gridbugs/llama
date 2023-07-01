@@ -83,8 +83,7 @@ val clock_delay : float -> bool t -> bool t
 val pulse : frequency_hz:float t -> duty_01:float t -> bool t
 
 val feedback : f:(float t -> float t) -> float t -> float t
-(** [feedback ~f s] is [f (feedback ~f (s + s')] where s' is the output from
-    the previous sample. That is, it adds its previous output to its input. *)
+(** [feedback ~f s] adds its previous output modifier by [f] to its input. *)
 
 val echo : f:(float t -> float t) -> delay_s:float t -> float t -> float t
 (** [echo ~f ~delay_s s] adds its own output to its input, modified by [f],

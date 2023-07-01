@@ -7,39 +7,28 @@
    (run cargo build --manifest-path=low-level-rust/Cargo.toml --release)
    (run mv low-level-rust/target/release/%{target} %{target}))))
 
-; On macos we need to pass some additional linker flags
 (rule
- (enabled_if (= %{system} macosx))
+ (enabled_if
+  (= %{system} macosx))
  (action
-  (write-file library_flags.txt
-"-ccopt
--framework
--ccopt
-CoreServices
--ccopt
--framework
--ccopt
-CoreAudio
--ccopt
--framework
--ccopt
-AudioUnit
--ccopt
--framework
--ccopt
-AudioToolbox")))
+  (write-file
+   library_flags.sexp
+   "(-cclib -framework -cclib CoreServices -cclib -framework -cclib CoreAudio -cclib -framework -cclib AudioUnit -cclib -framework -cclib AudioToolbox)")))
 
 (rule
- (enabled_if (= %{system} linux))
+ (enabled_if
+  (= %{system} linux))
  (action
-  (write-file library_flags.txt "")))
+  (write-file library_flags.sexp "(-cclib -lasound)")))
 
 (library
  (name llama_low_level)
  (public_name llama.low_level)
  (no_dynlink)
- (enabled_if (= %{system} macosx))
+ (enabled_if
+  (= %{system} macosx))
  (foreign_archives low_level)
  (c_library_flags
   (-lpthread -lc -lm))
- (library_flags %{read-lines:library_flags.txt}))
+ (library_flags
+  (:include library_flags.sexp)))

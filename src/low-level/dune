@@ -25,8 +25,6 @@
  (name llama_low_level)
  (public_name llama.low_level)
  (no_dynlink)
- (enabled_if
-  (= %{system} macosx))
  (foreign_archives low_level)
  (c_library_flags
   (-lpthread -lc -lm))

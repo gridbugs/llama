@@ -99,6 +99,7 @@ let mean ts =
   let length = Int.to_float (List.length ts) in
   sum ts |> map ~f:(fun sum -> sum /. length)
 
+let recip = map ~f:(fun x -> 1.0 /. x)
 let to_01 = map ~f:(fun x -> (x +. 1.0) /. 2.0)
 let add a b = both a b |> map ~f:(fun (a, b) -> a +. b)
 let ( +.. ) a b = add a b

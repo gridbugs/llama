@@ -119,14 +119,14 @@ let play_possibly_with_drums wav_players which =
   let clock = clock (const 16.0) in
   match which with
   | `Overdrive ->
-      drum_machine (clock |> clock_divider 4)
+      drum_machine (clock |> clock_divide 4)
       +.. (pentatonic_overdrive
-             ~sequencer_clock:(clock |> clock_divider 8)
-             ~effect_clock:(clock |> clock_divider 2)
+             ~sequencer_clock:(clock |> clock_divide 8)
+             ~effect_clock:(clock |> clock_divide 2)
           |> scale 0.4)
   | `Strings ->
-      drum_machine (clock |> clock_divider 4)
-      +.. pentatonic_strings ~sequencer_clock:(clock |> clock_divider 2)
+      drum_machine (clock |> clock_divide 4)
+      +.. pentatonic_strings ~sequencer_clock:(clock |> clock_divide 2)
 
 module Args = struct
   type t = { sample_paths : string list; strings : bool }

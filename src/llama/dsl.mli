@@ -10,6 +10,7 @@ val oscillator :
   ?square_wave_pulse_width_01:float t -> waveform t -> float t -> float t
 
 val noise_01 : unit -> float t
+val noise : min:float t -> max:float t -> float t
 
 val low_frequency_oscillator :
   ?square_wave_pulse_width_01:float t ->
@@ -28,7 +29,8 @@ val low_frequency_oscillator_01 :
   float t
 
 val clock : float t -> bool t
-val clock_divider : int -> bool t -> bool t
+val clock_of_period_s : float t -> bool t
+val clock_divide : int -> bool t -> bool t
 val asr_linear : gate:bool t -> attack_s:float t -> release_s:float t -> float t
 
 val adsr_linear :
@@ -79,3 +81,11 @@ val bitwise_trigger_sequencer : int -> int t list -> bool t -> bool t list
 val delay : 'a t -> time_s:float t -> fill:'a -> 'a t
 val clock_delay : float -> bool t -> bool t
 val pulse : frequency_hz:float t -> duty_01:float t -> bool t
+
+val feedback : f:(float t -> float t) -> float t -> float t
+(** [feedback ~f s] is [f (feedback ~f (s + s')] where s' is the output from
+    the previous sample. That is, it adds its previous output to its input. *)
+
+val echo : f:(float t -> float t) -> delay_s:float t -> float t -> float t
+(** [echo ~f ~delay_s s] adds its own output to its input, modified by [f],
+    after a delay of [delay_s] seconds. *)

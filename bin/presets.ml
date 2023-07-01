@@ -41,7 +41,7 @@ let pentatonic_strings ~sequencer_clock ~effect_clock:_ =
 
 let pentatonic_overdrive ~sequencer_clock ~effect_clock =
   Random.self_init ();
-  let _sequencer_clock = effect_clock |> clock_divider 4 in
+  let _sequencer_clock = effect_clock |> clock_divide 4 in
   let noise = noise_01 () in
   let sah_noise = sample_and_hold noise effect_clock in
   let { value = sequencer_freq; gate } =

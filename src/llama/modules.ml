@@ -1,11 +1,6 @@
 module Ctx = Signal.Ctx
 module Raw = Signal.Raw
 
-let sweep_01 frequency_hz =
-  Raw.with_state ~init:0.0 ~f:(fun state ctx ->
-      let state_delta = Signal.sample frequency_hz ctx /. ctx.sample_rate_hz in
-      Float.rem (state +. state_delta) 1.0)
-
 module Oscillator = struct
   type waveform = Sine | Saw | Triangle | Square | Noise
 
@@ -49,9 +44,42 @@ end
 module Clock = struct
   type t = { frequency_hz : float Signal.t }
 
+  (* We keep track of the step size for an entire tick and only update it in
+     between ticks to allow for rapid changes of clock frequency. For example
+     consider the case where the clock frequency is determined by random noise. In
+     this case resampling the clock frequency every frame would result in the
+     clock rate approximating the mean of the noise in practice but we'd rather
+     stick with a single randomly-chosen value for an entire frame. *)
+  type state = { step_size_this_tick : float; oscilator_value_01 : float }
+
   let signal t =
-    sweep_01 t.frequency_hz
-    |> Raw.map ~f:(fun state -> state < 0.5)
+    Raw.with_state' ~init:None ~f:(fun state ctx ->
+        let state =
+          match state with
+          | Some state -> state
+          | None ->
+              let step_size_this_tick =
+                Signal.sample t.frequency_hz ctx /. ctx.sample_rate_hz
+              in
+              { step_size_this_tick; oscilator_value_01 = 0.0 }
+        in
+        let state =
+          {
+            state with
+            oscilator_value_01 =
+              state.oscilator_value_01 +. state.step_size_this_tick;
+          }
+        in
+        let state =
+          if state.oscilator_value_01 >= 1.0 then
+            let oscilator_value_01 = Float.rem state.oscilator_value_01 1.0 in
+            let step_size_this_tick =
+              Signal.sample t.frequency_hz ctx /. ctx.sample_rate_hz
+            in
+            { oscilator_value_01; step_size_this_tick }
+          else state
+        in
+        (Some state, state.oscilator_value_01 < 0.5))
     |> Signal.of_raw |> Signal.trigger
 end
 

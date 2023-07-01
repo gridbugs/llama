@@ -16,6 +16,10 @@ let oscillator ?(square_wave_pulse_width_01 = const 0.5) waveform frequency_hz =
 
 let noise_01 () = oscillator (const Noise) (const 0.0) |> to_01
 
+let noise ~min ~max =
+  both (noise_01 ()) (both max min)
+  |> map ~f:(fun (noise, (max, min)) -> min +. (noise *. (max -. min)))
+
 let low_frequency_oscillator ?(square_wave_pulse_width_01 = const 0.5)
     ?(reset_offset_01 = const 0.0) waveform frequency_hz reset_trigger =
   Oscillator.(
@@ -35,8 +39,9 @@ let low_frequency_oscillator_01 ?(square_wave_pulse_width_01 = const 0.5)
   |> to_01
 
 let clock frequency_hz = Clock.(signal { frequency_hz })
+let clock_of_period_s period_s = clock (recip period_s)
 
-let clock_divider denominator clock =
+let clock_divide denominator clock =
   Clock_divider.(signal { clock; denominator })
 
 let asr_linear ~gate ~attack_s ~release_s =
@@ -101,3 +106,15 @@ let clock_delay time_s clock = delay clock ~time_s:(const time_s) ~fill:false
 let pulse ~frequency_hz ~duty_01 =
   oscillator ~square_wave_pulse_width_01:duty_01 (const Square) frequency_hz
   |> map ~f:(fun x -> x < 0.0)
+
+let feedback ~f =
+  let previous_output_signal, previous_output_ref = var 0.0 in
+  fun input_signal ->
+    map
+      (f previous_output_signal +.. input_signal)
+      ~f:(fun x ->
+        previous_output_ref := x;
+        x)
+
+let echo ~f ~delay_s =
+  feedback ~f:(fun out -> delay (f out) ~time_s:delay_s ~fill:0.0)

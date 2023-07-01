@@ -32,10 +32,10 @@ let wav_test wav_players =
     | _ -> silence
   in
   let clock = clock (const 16.0) in
-  drum_machine (clock |> clock_divider 4)
+  drum_machine (clock |> clock_divide 4)
   +.. (Presets.pentatonic_strings
-         ~sequencer_clock:(clock |> clock_divider 2)
-         ~effect_clock:(clock |> clock_divider 2)
+         ~sequencer_clock:(clock |> clock_divide 2)
+         ~effect_clock:(clock |> clock_divide 2)
       |> scale 0.6)
 
 let () =

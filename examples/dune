@@ -14,6 +14,11 @@
  (libraries lwt.unix llama llama.io llama.low_level))
 
 (executable
+ (public_name echo)
+ (modules echo)
+ (libraries lwt.unix llama llama.io llama.low_level))
+
+(executable
  (public_name polyphonic_events)
  (modules polyphonic_events)
  (libraries lwt.unix llama llama.io llama.low_level))

@@ -38,6 +38,7 @@ val debug : 'a t -> f:('a -> unit) -> 'a t
 val to_01 : float t -> float t
 (** Takes a signal assumed to be in the range -1..1 and shifts and scales it to be in the range 0..1 *)
 
+val recip : float t -> float t
 val sum : float t list -> float t
 val mean : float t list -> float t
 val add : float t -> float t -> float t

@@ -8,8 +8,8 @@ homepage: "https://github.com/gridbugs/llama"
 bug-reports: "https://github.com/gridbugs/llama/issues"
 depends: [
   "dune" {>= "3.0"}
-  "ocaml" {< "5.0.0"}
-  "lwt" {>= "4.0"}
+  "ocaml" {>= "4.13.0" & < "5.0.0"}
+  "lwt" {>= "5.4"}
   "conf-alsa" {os = "linux"}
   "odoc" {with-doc}
 ]

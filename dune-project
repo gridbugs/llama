@@ -14,7 +14,7 @@
  (depends
 
   ; The ocaml-boxroot-sys-0.2.0 crate doesn't build with ocaml 5.
-  (ocaml (< "5.0.0"))
+  (ocaml (and (>= "4.13.0") (< "5.0.0")))
 
   (lwt (>= 5.4))
 

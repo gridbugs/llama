@@ -10,12 +10,11 @@ module Live = struct
   include Signal
 end
 
+let play_signal_lwt ?(downsample = 1) signal =
+  Signal_player.play ~downsample signal
+
 let play_signal ?(downsample = 1) signal =
-  Llama_low_level.System.env_logger_init ();
-  let signal_player =
-    Signal_player.create ~downsample ~initial_signal:signal ()
-  in
-  Lwt_main.run (Signal_player.run signal_player)
+  Lwt_main.run (play_signal_lwt ~downsample signal)
 
 module Dsl = Dsl
 module Signal_player = Signal_player

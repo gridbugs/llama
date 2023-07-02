@@ -41,3 +41,8 @@ let rec loop t =
   loop t
 
 let run t = loop t
+
+let play ?(downsample = 1) signal =
+  Llama_low_level.System.env_logger_init ();
+  let t = create ~downsample ~initial_signal:signal () in
+  run t

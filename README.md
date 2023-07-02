@@ -1,9 +1,7 @@
 # Language for Live Audio Module Arrangement
 
-![Screenshot showing an oscilloscope rendering of an audio waveform](img/screenshot.png)
+*The llama is a domesticated South American camelid.*
 
-Run `dune exec examples/interactive.exe` and then use the top two rows of
-letter keys to play music!
 
 ## About
 
@@ -13,6 +11,7 @@ using components commonly found in synthesizers such as oscillators, envelope
 generators, and low/high pass filters. It can also be used from `utop` or other
 ocaml repl environments to perform music live.
 
+
 ## Llama in Action
 
 Videos showing off some of the example programs:
@@ -20,6 +19,7 @@ Videos showing off some of the example programs:
 - [random_pentatonic](https://youtu.be/wfmmdRo_ytU)
 - [echo](https://youtu.be/1ndhPlvDBH8)
 - [interactive](https://youtu.be/O8oc7MhG4uE)
+
 
 ## Getting Started
 
@@ -35,6 +35,17 @@ $ dune exec ./examples/polyphonic_events.exe
 $ dune exec ./examples/random_pentatonic.exe
 $ dune exec ./examples/echo.exe
 ```
+
+
+## Interactive Demo
+
+![Screenshot showing an oscilloscope rendering of an audio waveform](img/screenshot.png)
+
+Run `dune exec examples/interactive.exe` and then use the top two rows of
+letter keys on your keyboard to play music. The mouse position controls the
+frequency cutoff and resonance of a low-pass filter. Hack
+examples/interactive.ml to change how it sounds!
+
 
 ## Concepts
 
@@ -80,6 +91,7 @@ let output : float Signal.t = osc *.. envelope
 (* Play the sound! *)
 let () = play_signal output
 ```
+
 
 ## Example Session
 

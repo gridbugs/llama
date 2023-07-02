@@ -29,19 +29,81 @@ module Visualization_style = struct
   }
 end
 
+module Sample_buffer = struct
+  type t = { samples : float array; mutable next_i : int }
+
+  let create size =
+    let samples = Array.init size (Fun.const 0.0) in
+    { samples; next_i = 0 }
+
+  let length t = t.next_i
+  let is_full t = t.next_i == Array.length t.samples
+
+  let append_unless_full t sample =
+    if not (is_full t) then (
+      Array.set t.samples t.next_i sample;
+      t.next_i <- t.next_i + 1)
+
+  let clear t = t.next_i <- 0
+
+  let first_positive_gradient_zero_cross_index t =
+    let rec loop i =
+      if i >= t.next_i then None
+      else
+        let prev = Array.get t.samples (i - 1) in
+        let current = Array.get t.samples i in
+        if prev <= 0.0 && current >= 0.0 then Some i else loop (i + 1)
+    in
+    loop 1
+
+  let iteri t ~offset ~stride ~max_iterations ~f =
+    let rec loop i count =
+      if i >= t.next_i || count >= max_iterations then ()
+      else (
+        f count (Array.get t.samples i);
+        loop (i + stride) (count + 1))
+    in
+    loop offset 0
+end
+
 module Visualization = struct
   type t = {
     style : Visualization_style.t;
-    sample_buffer : float Queue.t;
+    sample_buffer : Sample_buffer.t;
     sample_count_within_current_frame : int option ref;
+    stable : bool;
+    stride : int;
   }
 
-  let create style =
+  let sample_buffer_size = 2048
+
+  let create ~style ~stable ~stride =
     {
       style;
-      sample_buffer = Queue.create ();
+      sample_buffer = Sample_buffer.create sample_buffer_size;
       sample_count_within_current_frame = ref None;
+      stable;
+      stride;
     }
+
+  let iteri_samples t ~window_width ~f =
+    let needed_num_samples = (window_width / t.stride) + 1 in
+    let offset =
+      if t.stable then
+        match
+          Sample_buffer.first_positive_gradient_zero_cross_index t.sample_buffer
+        with
+        | Some i ->
+            let remaining_samples_if_we_start_at_i =
+              (Sample_buffer.length t.sample_buffer - i) / t.stride
+            in
+            if remaining_samples_if_we_start_at_i >= needed_num_samples then i
+            else 0
+        | None -> 0
+      else 0
+    in
+    Sample_buffer.iteri t.sample_buffer ~offset ~stride:t.stride
+      ~max_iterations:needed_num_samples ~f
 
   let scaled_pixel_y_of_sample sample ~window_height ~pixel_scale ~sample_scale
       =
@@ -60,32 +122,32 @@ module Visualization = struct
       -. (Int.to_float scaled_pixel_y *. Int.to_float t.style.pixel_scale))
       /. (t.style.sample_scale *. window_y_mid)
     in
+    let mk_rect_rgba ~scaled_pixel_y ~i =
+      let x = i * t.style.pixel_scale in
+      let interpolated_sample = scaled_pixel_y_to_sample scaled_pixel_y in
+      let r, g, b, a =
+        rgba_01_to_bytes
+          (t.style.sample_to_rgba_01
+             (t.style.sample_scale *. interpolated_sample))
+      in
+      let sdl_rect =
+        {
+          Rect.h = t.style.pixel_scale;
+          w = t.style.pixel_scale;
+          x;
+          y = scaled_pixel_y * t.style.pixel_scale;
+        }
+      in
+      { Rect_rgba.sdl_rect; rgb = (r, g, b); a }
+    in
     let prev_sample = ref None in
-    let rec loop i =
-      if Queue.is_empty t.sample_buffer then ()
-      else
-        let x = i * t.style.pixel_scale in
-        let sample = Queue.take t.sample_buffer in
+    iteri_samples t ~window_width ~f:(fun i sample ->
         let scaled_pixel_y = scaled_pixel_y_of_sample sample in
-        let interpolated_sample = scaled_pixel_y_to_sample scaled_pixel_y in
-        let r, g, b, a =
-          rgba_01_to_bytes
-            (t.style.sample_to_rgba_01
-               (t.style.sample_scale *. interpolated_sample))
-        in
-        let sdl_rect =
-          {
-            Rect.h = t.style.pixel_scale;
-            w = t.style.pixel_scale;
-            x;
-            y = scaled_pixel_y * t.style.pixel_scale;
-          }
-        in
-        let rect_rgba = { Rect_rgba.sdl_rect; rgb = (r, g, b); a } in
-        f rect_rgba;
+        f (mk_rect_rgba ~scaled_pixel_y ~i);
         (match !prev_sample with
         | None -> ()
         | Some prev_sample ->
+            (* fill in the vertical space between the previous and current sample *)
             let scaled_pixel_y0 = scaled_pixel_y_of_sample prev_sample in
             let scaled_pixel_y1 = scaled_pixel_y_of_sample sample in
             let scaled_pixel_y_values =
@@ -99,29 +161,9 @@ module Visualization = struct
               else []
             in
             List.iter scaled_pixel_y_values ~f:(fun scaled_pixel_y ->
-                let interpolated_sample =
-                  scaled_pixel_y_to_sample scaled_pixel_y
-                in
-                let r, g, b, a =
-                  rgba_01_to_bytes
-                    (t.style.sample_to_rgba_01
-                       (t.style.sample_scale *. interpolated_sample))
-                in
-                let sdl_rect =
-                  {
-                    Rect.h = t.style.pixel_scale;
-                    w = t.style.pixel_scale;
-                    x;
-                    y = scaled_pixel_y * t.style.pixel_scale;
-                  }
-                in
-                let rect_rgba = { Rect_rgba.sdl_rect; rgb = (r, g, b); a } in
-                f rect_rgba));
-        prev_sample := Some sample;
-        if x >= window_width then () else loop (i + 1)
-    in
-    loop 0;
-    Queue.clear t.sample_buffer;
+                f (mk_rect_rgba ~scaled_pixel_y ~i)));
+        prev_sample := Some sample);
+    Sample_buffer.clear t.sample_buffer;
     t.sample_count_within_current_frame := None
 end
 
@@ -258,27 +300,11 @@ let visualize t ?(pixel_scale = Defaults.pixel_scale)
   let style =
     { Visualization_style.pixel_scale; sample_scale; sample_to_rgba_01 }
   in
-  let visualization = Visualization.create style in
+  let visualization = Visualization.create ~style ~stable ~stride in
   t.visualization := Some visualization;
-  let prev_sample = ref 0.0 in
   Signal.of_raw (fun (ctx : Ctx.t) ->
       let sample = Signal.sample signal ctx in
-      (* Wait until the signal is crossing 0 with a positive gradient before
-         starting to collect samples for this frame so the visualization is
-         stable. When the counter is [Some _] it indicates that we've started
-         recording samples this frame. *)
-      if
-        (not stable)
-        && Option.is_none !(visualization.sample_count_within_current_frame)
-        || (sample >= 0.0 && !prev_sample <= 0.0)
-      then visualization.sample_count_within_current_frame := Some 0;
-      (match !(visualization.sample_count_within_current_frame) with
-      | None -> ()
-      | Some count ->
-          if Int.equal (count mod stride) 0 then
-            Queue.add sample visualization.sample_buffer;
-          visualization.sample_count_within_current_frame := Some (count + 1));
-      prev_sample := sample;
+      Sample_buffer.append_unless_full visualization.sample_buffer sample;
       sample)
 
 let rec main_loop t =

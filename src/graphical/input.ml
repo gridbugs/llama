@@ -132,52 +132,6 @@ module All_keyboard = struct
       key_9 = f t.key_9;
       key_0 = f t.key_0;
     }
-
-  let get_by_sdl_scancode t scancode =
-    let open Sdlscancode in
-    match scancode with
-    | A -> Some t.key_a
-    | B -> Some t.key_b
-    | C -> Some t.key_c
-    | D -> Some t.key_d
-    | E -> Some t.key_e
-    | F -> Some t.key_f
-    | G -> Some t.key_g
-    | H -> Some t.key_h
-    | I -> Some t.key_i
-    | J -> Some t.key_j
-    | K -> Some t.key_k
-    | L -> Some t.key_l
-    | M -> Some t.key_m
-    | N -> Some t.key_n
-    | O -> Some t.key_o
-    | P -> Some t.key_p
-    | Q -> Some t.key_q
-    | R -> Some t.key_r
-    | S -> Some t.key_s
-    | T -> Some t.key_t
-    | U -> Some t.key_u
-    | V -> Some t.key_v
-    | W -> Some t.key_w
-    | X -> Some t.key_x
-    | Y -> Some t.key_y
-    | Z -> Some t.key_z
-    | SEMICOLON -> Some t.key_semicolon
-    | APOSTROPHE -> Some t.key_apostrophe
-    | COMMA -> Some t.key_comma
-    | PERIOD -> Some t.key_period
-    | SPACE -> Some t.key_space
-    | Num1 -> Some t.key_1
-    | Num2 -> Some t.key_2
-    | Num3 -> Some t.key_3
-    | Num4 -> Some t.key_4
-    | Num5 -> Some t.key_5
-    | Num6 -> Some t.key_6
-    | Num7 -> Some t.key_7
-    | Num8 -> Some t.key_8
-    | Num9 -> Some t.key_9
-    | Num0 -> Some t.key_0
-    | _ -> None
 end
 
 module Mouse_pos = struct

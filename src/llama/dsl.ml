@@ -132,3 +132,6 @@ let feedback ~f =
 
 let echo ~f ~delay_s =
   feedback ~f:(fun out -> delay (f out) ~time_s:delay_s ~fill:0.0)
+
+let lazy_amplifier signal_ ~volume =
+  Lazy_amplifier.(signal { signal = signal_; volume })

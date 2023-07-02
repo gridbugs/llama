@@ -94,3 +94,5 @@ val feedback : f:(float t -> float t) -> float t -> float t
 val echo : f:(float t -> float t) -> delay_s:float t -> float t -> float t
 (** [echo ~f ~delay_s s] adds its own output to its input, modified by [f],
     after a delay of [delay_s] seconds. *)
+
+val lazy_amplifier : float t -> volume:float t -> float t

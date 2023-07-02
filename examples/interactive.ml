@@ -3,14 +3,13 @@ open Dsl
 
 let mk_voice gate freq_hz effect_clock =
   let sah_noise = sample_and_hold (noise_01 ()) effect_clock in
-  let lfo =
-    low_frequency_oscillator (const Sine) (const 0.3) (trigger ~init:false gate)
-  in
+  let lfo = low_frequency_oscillator (const Sine) (const 0.2) (trigger gate) in
+  let freq_signal = const freq_hz in
   let osc =
     mean
       [
-        oscillator (const Saw) (const freq_hz);
-        oscillator (const Saw) (const (freq_hz *. 2.0));
+        oscillator (const Saw) freq_signal;
+        oscillator (const Saw) (freq_signal |> scale 2.0);
       ]
   in
   let release_s = const 0.1 in
@@ -19,21 +18,21 @@ let mk_voice gate freq_hz effect_clock =
       ~sustain_01:(const 1.0) ~release_s
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 10.0)
+    chebyshev_low_pass_filter osc ~epsilon:(const 5.0)
       ~cutoff_hz:
         (sum
            [
              const 100.0;
              filter_env |> scale 1000.0;
-             sah_noise |> scale 2000.0;
-             lfo |> scale 1000.0;
+             sah_noise |> scale 500.0;
+             lfo |> scale 500.0;
            ])
   in
   let amp_env =
     asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0
   in
-  filtered_osc *.. amp_env
-  |> map ~f:(fun x -> Float.clamp_sym ~mag:2.0 (x *. 5.0))
+  lazy_amplifier filtered_osc ~volume:amp_env
+  |> map ~f:(fun x -> Float.clamp_sym ~mag:2.0 (x *. 10.0))
 
 let mk_voices (keys : bool Signal.t Input.All_keyboard.t) ~note_for_s_key =
   (* Subtract 1 because s is the second key in the list. This will give us one
@@ -61,7 +60,7 @@ let mk_voices (keys : bool Signal.t Input.All_keyboard.t) ~note_for_s_key =
       keys.key_semicolon;
     ]
   in
-  let effect_clock = clock (const 4.0) in
+  let effect_clock = clock (const 8.0) in
   sum
     (List.mapi key_gates_in_order ~f:(fun i gate ->
          let midi_index = base_index + i in

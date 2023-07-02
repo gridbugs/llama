@@ -75,7 +75,7 @@ module Butterworth = struct
           Signal.sample t.half_power_frequency_hz ctx
         in
         let half_power_frequency_sample_rate_ratio =
-          half_power_frequency_hz /. ctx.sample_rate_hz
+          half_power_frequency_hz /. ctx.sample_rate_hz |> Float.max 0.0
         in
         update_buffer buffer ~half_power_frequency_sample_rate_ratio;
         apply_buffer buffer sample
@@ -154,7 +154,9 @@ module Chebyshev = struct
       fun ctx ->
         let sample = Signal.sample t.signal ctx in
         let cutoff_hz = Signal.sample t.cutoff_hz ctx in
-        let cutoff_sample_rate_ratio = cutoff_hz /. ctx.sample_rate_hz in
+        let cutoff_sample_rate_ratio =
+          cutoff_hz /. ctx.sample_rate_hz |> Float.max 0.0
+        in
         let epsilon = Signal.sample t.epsilon ctx |> Float.max epsilon_min in
         update_buffer buffer ~cutoff_sample_rate_ratio ~epsilon;
         let output_scaled = apply_buffer buffer sample in

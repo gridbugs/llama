@@ -22,7 +22,7 @@ val const : 'a -> 'a t
 val var : 'a -> 'a t * 'a ref
 val silence : float t
 val never : bool t
-val trigger : init:bool -> bool t -> bool t
+val trigger : ?init:bool -> bool t -> bool t
 val scale : float -> float t -> float t
 val offset : float -> float t -> float t
 

@@ -66,7 +66,7 @@ let var x =
 let silence = const 0.0
 let never = const false
 
-let trigger ~init t =
+let trigger ?(init = false) t =
   of_raw
     (let previous = ref init in
      fun ctx ->

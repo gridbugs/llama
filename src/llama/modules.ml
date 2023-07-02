@@ -398,3 +398,17 @@ module Delay = struct
 
   let signal t = Signal.of_raw (raw t)
 end
+
+module Lazy_amplifier = struct
+  type t = { signal : float Signal.t; volume : float Signal.t }
+
+  let threshold = 0.001
+
+  let signal t =
+    Signal.of_raw (fun ctx ->
+        let volume = Signal.sample t.volume ctx in
+        if volume < threshold then 0.0
+        else
+          let sample = Signal.sample t.signal ctx in
+          sample *. volume)
+end

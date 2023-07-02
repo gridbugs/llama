@@ -122,3 +122,9 @@ module Delay : sig
 
   val signal : 'a t -> 'a Signal.t
 end
+
+module Lazy_amplifier : sig
+  type t = { signal : float Signal.t; volume : float Signal.t }
+
+  val signal : t -> float Signal.t
+end

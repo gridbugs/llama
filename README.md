@@ -1,5 +1,7 @@
 # Language for Live Audio Module Arrangement
 
+![Screenshot showing an oscilloscope rendering of an audio waveform)(img/screenshot.png)
+
 *The llama is a domesticated South American camelid.*
 
 ## About
@@ -16,6 +18,7 @@ Here are some videos showing off some of the example programs:
 - [polyphonic_events](https://youtu.be/o-XPH1j0NqE)
 - [random_pentatonic](https://youtu.be/wfmmdRo_ytU)
 - [echo](https://youtu.be/1ndhPlvDBH8)
+- [interactive](https://youtu.be/O8oc7MhG4uE)
 
 ## Getting Started
 

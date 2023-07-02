@@ -2,7 +2,8 @@
 
 ![Screenshot showing an oscilloscope rendering of an audio waveform](img/screenshot.png)
 
-*The llama is a domesticated South American camelid.*
+Run `dune exec examples/interactive.exe` and then use the top two rows of
+letter keys to play music!
 
 ## About
 
@@ -14,7 +15,7 @@ ocaml repl environments to perform music live.
 
 ## Llama in Action
 
-Here are some videos showing off some of the example programs:
+Videos showing off some of the example programs:
 - [polyphonic_events](https://youtu.be/o-XPH1j0NqE)
 - [random_pentatonic](https://youtu.be/wfmmdRo_ytU)
 - [echo](https://youtu.be/1ndhPlvDBH8)

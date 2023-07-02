@@ -5,17 +5,18 @@ let hsv_to_rgb h s v =
   if Float.equal s 0.0 then (v, v, v)
   else
     let h = h /. 60.0 in
-    let i = Float.round h in
-    let f = h -. i in
+    let i = Float.to_int h in
+    let f = h -. Int.to_float i in
     let p = v *. (1.0 -. s) in
     let q = v *. (1.0 -. (s *. f)) in
     let t = v *. (1.0 -. (s *. (1.0 -. f))) in
-    if Float.equal i 0.0 then (v, t, p)
-    else if Float.equal i 1.0 then (q, v, p)
-    else if Float.equal i 2.0 then (p, v, t)
-    else if Float.equal i 3.0 then (p, q, v)
-    else if Float.equal i 4.0 then (t, p, v)
-    else (v, p, q)
+    match i with
+    | 0 -> (v, t, p)
+    | 1 -> (q, v, p)
+    | 2 -> (p, v, t)
+    | 3 -> (p, q, v)
+    | 4 -> (t, p, v)
+    | _ -> (v, p, q)
 
 let waveform_sequencer =
   value_sequencer

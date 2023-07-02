@@ -4,7 +4,7 @@
   (source_tree low-level-rust))
  (action
   (progn
-   (run cargo build --manifest-path=low-level-rust/Cargo.toml --release)
+   (run cargo build --manifest-path=low-level-rust/Cargo.toml --release --offline)
    (run mv low-level-rust/target/release/%{target} %{target}))))
 
 (rule

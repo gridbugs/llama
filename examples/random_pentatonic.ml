@@ -6,7 +6,7 @@
    E.g.:  dune exec ./examples/random_pentatonic.exe -- cymbal.wav snare.wav bass.wav
 *)
 
-open Llama
+open Llama_graphical
 open Dsl
 
 let random_pentatonic_sequencer octave period clock =
@@ -154,4 +154,5 @@ let () =
   in
   let which = if strings then `Strings else `Overdrive in
   Random.self_init ();
-  play_signal (play_possibly_with_drums wav_players which |> scale 0.1)
+  play_signal_visualized ~scale_output_volume:0.1 ~stride:4
+    (play_possibly_with_drums wav_players which)

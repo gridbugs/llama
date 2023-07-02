@@ -90,7 +90,7 @@ let steps = [ Some (110.0, 0.1); Some (123.47, 0.1); Some (98.0, 0.2); None ]
 |> List.map (Option.map (fun (freq, period) -> { value = const freq; period_s = const period }));;
 
 (* Create a sequencer to play the notes. *)
-let { value = freq; gate } = step_sequencer steps (clock (const 4.0));;
+let { value = freq; gate } = sustained_step_sequencer steps (clock (const 4.0));;
 
 (* Create an oscillator to buzz at the frequency selected by the sequencer. *)
 let osc = oscillator (const Saw) freq;;

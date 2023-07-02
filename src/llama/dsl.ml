@@ -3,6 +3,8 @@ include Signal
 
 type waveform = Oscillator.waveform = Sine | Saw | Triangle | Square | Noise
 
+let waveform_to_string = Oscillator.waveform_to_string
+
 let oscillator ?(square_wave_pulse_width_01 = const 0.5) waveform frequency_hz =
   Oscillator.(
     signal
@@ -50,20 +52,32 @@ let asr_linear ~gate ~attack_s ~release_s =
 let adsr_linear ~gate ~attack_s ~decay_s ~sustain_01 ~release_s =
   Adsr_linear.(signal { gate; attack_s; decay_s; sustain_01; release_s })
 
-type sequencer_output = Sequencer.output = {
-  value : float Signal.t;
+type 'a sequencer_output = 'a Sequencer.output = {
+  value : 'a Signal.t;
   gate : bool Signal.t;
 }
 
-type step_sequencer_step = Step_sequencer.step = {
-  value : float Signal.t;
+type 'a sequencer_step = 'a Sequencer.step = {
+  value : 'a Signal.t;
   period_s : float Signal.t;
 }
 
-let step_sequencer sequence clock = Step_sequencer.(signal { sequence; clock })
+let sustained_step_sequencer sequence clock =
+  Sustained_step_sequencer.(signal { sequence; clock })
+
+let generic_step_sequencer sequence clock =
+  Generic_step_sequencer.(signal { sequence; clock })
 
 let random_sequencer values period clock =
   Random_sequencer.(signal { values; period; clock })
+
+let value_sequencer values clock =
+  let { value; gate = _ } =
+    generic_step_sequencer
+      (List.map values ~f:(fun value -> { value; period_s = const 0.0 }))
+      clock
+  in
+  value
 
 let butterworth_low_pass_filter ?(filter_order_half = 1) signal_
     ~half_power_frequency_hz =

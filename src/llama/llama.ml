@@ -10,11 +10,11 @@ module Live = struct
   include Signal
 end
 
-let play_signal_lwt ?(downsample = 1) signal =
-  Signal_player.play ~downsample signal
+let play_signal_lwt ?(downsample = 1) ?(scale_output_volume = 1.0) signal =
+  Signal_player.play ~downsample (signal |> Dsl.scale scale_output_volume)
 
-let play_signal ?(downsample = 1) signal =
-  Lwt_main.run (play_signal_lwt ~downsample signal)
+let play_signal ?(downsample = 1) ?(scale_output_volume = 1.0) signal =
+  Lwt_main.run (play_signal_lwt ~downsample ~scale_output_volume signal)
 
 module Dsl = Dsl
 module Signal_player = Signal_player

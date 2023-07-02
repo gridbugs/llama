@@ -6,6 +6,8 @@ end
 
 type waveform = Sine | Saw | Triangle | Square | Noise
 
+val waveform_to_string : waveform -> string
+
 val oscillator :
   ?square_wave_pulse_width_01:float t -> waveform t -> float t -> float t
 
@@ -41,13 +43,17 @@ val adsr_linear :
   release_s:float t ->
   float t
 
-type sequencer_output = { value : float Signal.t; gate : bool Signal.t }
-type step_sequencer_step = { value : float Signal.t; period_s : float Signal.t }
+type 'a sequencer_output = { value : 'a Signal.t; gate : bool Signal.t }
+type 'a sequencer_step = { value : 'a Signal.t; period_s : float Signal.t }
 
-val step_sequencer :
-  step_sequencer_step option list -> bool t -> sequencer_output
+val sustained_step_sequencer :
+  float sequencer_step option list -> bool t -> float sequencer_output
 
-val random_sequencer : float t list -> float t -> bool t -> sequencer_output
+val generic_step_sequencer :
+  'a sequencer_step list -> bool t -> 'a sequencer_output
+
+val random_sequencer : 'a t list -> float t -> bool t -> 'a sequencer_output
+val value_sequencer : 'a t list -> bool t -> 'a t
 
 val butterworth_low_pass_filter :
   ?filter_order_half:int ->

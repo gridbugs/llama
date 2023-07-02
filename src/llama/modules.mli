@@ -1,6 +1,8 @@
 module Oscillator : sig
   type waveform = Sine | Saw | Triangle | Square | Noise
 
+  val waveform_to_string : waveform -> string
+
   type t = {
     waveform : waveform Signal.t;
     frequency_hz : float Signal.t;
@@ -47,24 +49,32 @@ module Adsr_linear : sig
 end
 
 module Sequencer : sig
-  type output = { value : float Signal.t; gate : bool Signal.t }
+  type 'a output = { value : 'a Signal.t; gate : bool Signal.t }
+  type 'a step = { value : 'a Signal.t; period_s : float Signal.t }
 end
 
-module Step_sequencer : sig
-  type step = { value : float Signal.t; period_s : float Signal.t }
+module Sustained_step_sequencer : sig
+  type step = float Sequencer.step
   type t = { sequence : step option list; clock : bool Signal.t }
 
-  val signal : t -> Sequencer.output
+  val signal : t -> float Sequencer.output
+end
+
+module Generic_step_sequencer : sig
+  type 'a step = 'a Sequencer.step
+  type 'a t = { sequence : 'a step list; clock : bool Signal.t }
+
+  val signal : 'a t -> 'a Sequencer.output
 end
 
 module Random_sequencer : sig
-  type t = {
-    values : float Signal.t list;
+  type 'a t = {
+    values : 'a Signal.t list;
     period : float Signal.t;
     clock : bool Signal.t;
   }
 
-  val signal : t -> Sequencer.output
+  val signal : 'a t -> 'a Sequencer.output
 end
 
 module Butterworth_filter : sig

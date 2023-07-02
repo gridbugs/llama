@@ -1,0 +1,11 @@
+let title = "Llama"
+let width = 960
+let height = 720
+let fps = 30.0
+let background_rgba_01 = (0.0, 0.0, 0.0, 1.0)
+let f_delay_s = 0.5
+let pixel_scale = 8
+let sample_scale = 0.5
+let sample_to_rgb_01 = Fun.const (1.0, 1.0, 1.0, 1.0)
+let stride = 1
+let stable = false

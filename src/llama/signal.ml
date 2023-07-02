@@ -66,9 +66,9 @@ let var x =
 let silence = const 0.0
 let never = const false
 
-let trigger t =
+let trigger ~init t =
   of_raw
-    (let previous = ref false in
+    (let previous = ref init in
      fun ctx ->
        let sample = sample t ctx in
        let trigger_sample = sample && not !previous in

@@ -4,6 +4,13 @@ module Raw = Signal.Raw
 module Oscillator = struct
   type waveform = Sine | Saw | Triangle | Square | Noise
 
+  let waveform_to_string = function
+    | Sine -> "sine"
+    | Saw -> "saw"
+    | Triangle -> "triangle"
+    | Square -> "square"
+    | Noise -> "noise"
+
   type t = {
     waveform : waveform Signal.t;
     frequency_hz : float Signal.t;
@@ -80,7 +87,7 @@ module Clock = struct
           else state
         in
         (Some state, state.oscilator_value_01 < 0.5))
-    |> Signal.of_raw |> Signal.trigger
+    |> Signal.of_raw |> Signal.trigger ~init:true
 end
 
 module Clock_divider = struct
@@ -160,11 +167,12 @@ module Adsr_linear = struct
 end
 
 module Sequencer = struct
-  type output = { value : float Signal.t; gate : bool Signal.t }
+  type 'a output = { value : 'a Signal.t; gate : bool Signal.t }
+  type 'a step = { value : 'a Signal.t; period_s : float Signal.t }
 end
 
-module Step_sequencer = struct
-  type step = { value : float Signal.t; period_s : float Signal.t }
+module Sustained_step_sequencer = struct
+  type step = float Sequencer.step
   type t = { sequence : step option list; clock : bool Signal.t }
 
   type state = {
@@ -173,17 +181,12 @@ module Step_sequencer = struct
     current_value : float;
   }
 
-  let init_state t =
-    {
-      step_index = List.length t.sequence - 1;
-      gate_remain_s = 0.0;
-      current_value = 0.0;
-    }
+  let init_state = { step_index = 0; gate_remain_s = 0.0; current_value = 0.0 }
 
   let signal t =
     let sequence_array = Array.of_list t.sequence in
     let combined =
-      Raw.with_state' ~init:(init_state t) ~f:(fun state ctx ->
+      Raw.with_state' ~init:init_state ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
           let state =
             if Signal.sample t.clock ctx then
@@ -217,38 +220,81 @@ module Step_sequencer = struct
     }
 end
 
+module Generic_step_sequencer = struct
+  type 'a step = 'a Sequencer.step
+  type 'a t = { sequence : 'a step list; clock : bool Signal.t }
+  type state = { step_index : int; gate_remain_s : float }
+
+  let init_state = { step_index = 0; gate_remain_s = 0.0 }
+
+  let signal t =
+    let sequence_array = Array.of_list t.sequence in
+    let combined =
+      Raw.with_state' ~init:init_state ~f:(fun state ctx ->
+          let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
+          let state, current_step =
+            if Signal.sample t.clock ctx then
+              let step_index =
+                (state.step_index + 1) mod Array.length sequence_array
+              in
+              let gate_remain_s, current_step =
+                let current_step = Array.get sequence_array step_index in
+                let gate_remain_s =
+                  Signal.sample current_step.period_s ctx -. gate_remain_s_delta
+                in
+                (gate_remain_s, current_step)
+              in
+              ({ step_index; gate_remain_s }, current_step)
+            else
+              ( {
+                  state with
+                  gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
+                },
+                Array.get sequence_array state.step_index )
+          in
+          ( state,
+            (Signal.sample current_step.value ctx, state.gate_remain_s > 0.0) ))
+      |> Signal.of_raw
+    in
+    {
+      Sequencer.value = Signal.map combined ~f:fst;
+      gate = Signal.map combined ~f:snd;
+    }
+end
+
 module Random_sequencer = struct
-  type t = {
-    values : float Signal.t list;
+  type 'a t = {
+    values : 'a Signal.t list;
     period : float Signal.t;
     clock : bool Signal.t;
   }
 
-  type state = { gate_remain_s : float; current_value : float }
+  type state = { gate_remain_s : float; current_index : int }
 
   let signal t =
     let value_array = Array.of_list t.values in
+    let choose_index () = Random.int (Array.length value_array) in
     let combined =
-      Raw.with_state' ~init:{ gate_remain_s = 0.0; current_value = 0.0 }
+      Raw.with_state'
+        ~init:{ gate_remain_s = 0.0; current_index = choose_index () }
         ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
           let state =
             if Signal.sample t.clock ctx then
-              let index = Random.int (Array.length value_array) in
-              let current_value =
-                Signal.sample (Array.get value_array index) ctx
-              in
+              let current_index = choose_index () in
               let gate_remain_s =
                 Signal.sample t.period ctx -. gate_remain_s_delta
               in
-              { current_value; gate_remain_s }
+              { gate_remain_s; current_index }
             else
               {
                 state with
                 gate_remain_s = state.gate_remain_s -. gate_remain_s_delta;
               }
           in
-          (state, (state.current_value, state.gate_remain_s > 0.0)))
+          ( state,
+            ( Signal.sample (Array.get value_array state.current_index) ctx,
+              state.gate_remain_s > 0.0 ) ))
       |> Signal.of_raw
     in
     {

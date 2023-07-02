@@ -21,6 +21,12 @@
  (action
   (write-file library_flags.sexp "(-cclib -lasound)")))
 
+(rule
+ (enabled_if
+  (and (<> %{system} macosx) (<> %{system} linux)))
+ (action
+  (write-file library_flags.sexp "()")))
+
 (library
  (name llama_low_level)
  (public_name llama.low_level)

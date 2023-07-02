@@ -1,6 +1,6 @@
 # Language for Live Audio Module Arrangement
 
-![Screenshot showing an oscilloscope rendering of an audio waveform)(img/screenshot.png)
+![Screenshot showing an oscilloscope rendering of an audio waveform](img/screenshot.png)
 
 *The llama is a domesticated South American camelid.*
 

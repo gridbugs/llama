@@ -1,5 +1,6 @@
 include Llama
 module Window = Window
+module Input = Input
 
 let with_window_lwt = Window.with_lwt
 let with_window = Window.with_

@@ -29,3 +29,5 @@ val visualize :
   ?stable:bool ->
   float Llama.Signal.t ->
   float Llama.Signal.t
+
+val input_signals : t -> (bool Llama.Signal.t, float Llama.Signal.t) Input.t

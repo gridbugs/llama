@@ -3,6 +3,7 @@ include module type of struct
 end
 
 module Window = Window
+module Input = Input
 
 val with_window_lwt :
   ?title:string ->

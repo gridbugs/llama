@@ -69,7 +69,9 @@ module Visualization = struct
         let scaled_pixel_y = scaled_pixel_y_of_sample sample in
         let interpolated_sample = scaled_pixel_y_to_sample scaled_pixel_y in
         let r, g, b, a =
-          rgba_01_to_bytes (t.style.sample_to_rgba_01 interpolated_sample)
+          rgba_01_to_bytes
+            (t.style.sample_to_rgba_01
+               (t.style.sample_scale *. interpolated_sample))
         in
         let sdl_rect =
           {
@@ -102,7 +104,8 @@ module Visualization = struct
                 in
                 let r, g, b, a =
                   rgba_01_to_bytes
-                    (t.style.sample_to_rgba_01 interpolated_sample)
+                    (t.style.sample_to_rgba_01
+                       (t.style.sample_scale *. interpolated_sample))
                 in
                 let sdl_rect =
                   {
@@ -122,17 +125,89 @@ module Visualization = struct
     t.sample_count_within_current_frame := None
 end
 
+let create_inputs () =
+  let open Input in
+  let keyboard = All_keyboard.init ~f:(fun () -> Signal.var false) in
+  let keyboard_signals = All_keyboard.map keyboard ~f:fst in
+  let keyboard_refs = All_keyboard.map keyboard ~f:snd in
+  let mouse = Mouse_pos.init ~f:(fun () -> Signal.var 0.0) in
+  let mouse_signals = Mouse_pos.map mouse ~f:fst in
+  let mouse_refs = Mouse_pos.map mouse ~f:snd in
+  let signals = { keyboard = keyboard_signals; mouse = mouse_signals } in
+  let refs = { keyboard = keyboard_refs; mouse = mouse_refs } in
+  (signals, refs)
+
+let key_of_scancode (all_keyboard : 'a Input.All_keyboard.t)
+    (scancode : Sdlscancode.t) =
+  match scancode with
+  | A -> Some all_keyboard.key_a
+  | B -> Some all_keyboard.key_b
+  | C -> Some all_keyboard.key_c
+  | D -> Some all_keyboard.key_d
+  | E -> Some all_keyboard.key_e
+  | F -> Some all_keyboard.key_f
+  | G -> Some all_keyboard.key_g
+  | H -> Some all_keyboard.key_h
+  | I -> Some all_keyboard.key_i
+  | J -> Some all_keyboard.key_j
+  | K -> Some all_keyboard.key_k
+  | L -> Some all_keyboard.key_l
+  | M -> Some all_keyboard.key_m
+  | N -> Some all_keyboard.key_n
+  | O -> Some all_keyboard.key_o
+  | P -> Some all_keyboard.key_p
+  | Q -> Some all_keyboard.key_q
+  | R -> Some all_keyboard.key_r
+  | S -> Some all_keyboard.key_s
+  | T -> Some all_keyboard.key_t
+  | U -> Some all_keyboard.key_u
+  | V -> Some all_keyboard.key_v
+  | W -> Some all_keyboard.key_w
+  | X -> Some all_keyboard.key_x
+  | Y -> Some all_keyboard.key_y
+  | Z -> Some all_keyboard.key_z
+  | SEMICOLON -> Some all_keyboard.key_semicolon
+  | APOSTROPHE -> Some all_keyboard.key_apostrophe
+  | COMMA -> Some all_keyboard.key_comma
+  | PERIOD -> Some all_keyboard.key_period
+  | SPACE -> Some all_keyboard.key_space
+  | Num1 -> Some all_keyboard.key_1
+  | Num2 -> Some all_keyboard.key_2
+  | Num3 -> Some all_keyboard.key_3
+  | Num4 -> Some all_keyboard.key_4
+  | Num5 -> Some all_keyboard.key_5
+  | Num6 -> Some all_keyboard.key_6
+  | Num7 -> Some all_keyboard.key_7
+  | Num8 -> Some all_keyboard.key_8
+  | Num9 -> Some all_keyboard.key_9
+  | Num0 -> Some all_keyboard.key_0
+  | _ -> None
+
 type t = {
   window : Window.t;
   render : Render.t;
   fps : float;
   background_rgba_01 : Types.rgba_01;
   visualization : Visualization.t option ref;
+  input_signals : (bool Signal.t, float Signal.t) Input.t;
+  input_refs : (bool ref, float ref) Input.t;
 }
 
-let proc_events _t = function
-  | Event.KeyDown { keycode = Keycode.Q; _ }
-  | Event.KeyDown { keycode = Keycode.Escape; _ }
+let proc_events t = function
+  | Event.Mouse_Motion { mm_x; mm_y; _ } ->
+      let window_width, window_height = Window.get_size t.window in
+      let mouse_x_01 = Float.of_int mm_x /. Float.of_int window_width in
+      let mouse_y_01 = Float.of_int mm_y /. Float.of_int window_height in
+      t.input_refs.mouse.mouse_x := mouse_x_01;
+      t.input_refs.mouse.mouse_y := mouse_y_01
+  | Event.KeyDown { scancode; _ } -> (
+      match key_of_scancode t.input_refs.keyboard scancode with
+      | Some key_ref -> key_ref := true
+      | None -> ())
+  | Event.KeyUp { scancode; _ } -> (
+      match key_of_scancode t.input_refs.keyboard scancode with
+      | Some key_ref -> key_ref := false
+      | None -> ())
   | Event.Quit _ ->
       Sdl.quit ();
       exit 0
@@ -150,8 +225,17 @@ let create ~title ~width ~height ~fps ~background_rgba_01 =
   let window, render =
     Render.create_window_and_renderer ~width ~height ~flags:[]
   in
+  let input_signals, input_refs = create_inputs () in
   Window.set_title ~window ~title;
-  { window; render; fps; background_rgba_01; visualization = ref None }
+  {
+    window;
+    render;
+    fps;
+    background_rgba_01;
+    visualization = ref None;
+    input_signals;
+    input_refs;
+  }
 
 let render t =
   let r, g, b, a = rgba_01_to_bytes t.background_rgba_01 in
@@ -183,8 +267,11 @@ let visualize t ?(pixel_scale = Defaults.pixel_scale)
          starting to collect samples for this frame so the visualization is
          stable. When the counter is [Some _] it indicates that we've started
          recording samples this frame. *)
-      if (not stable) || (sample >= 0.0 && !prev_sample < 0.0) then
-        visualization.sample_count_within_current_frame := Some 0;
+      if
+        (not stable)
+        && Option.is_none !(visualization.sample_count_within_current_frame)
+        || (sample >= 0.0 && !prev_sample <= 0.0)
+      then visualization.sample_count_within_current_frame := Some 0;
       (match !(visualization.sample_count_within_current_frame) with
       | None -> ()
       | Some count ->
@@ -225,3 +312,5 @@ let with_ ?(title = Defaults.title) ?(width = Defaults.width)
     ?(f_delay_s = Defaults.f_delay_s) f =
   Lwt_main.run
     (with_lwt ~title ~width ~height ~fps ~background_rgba_01 ~f_delay_s f)
+
+let input_signals t = t.input_signals

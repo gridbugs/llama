@@ -93,7 +93,7 @@ let () = play_signal output
 ```
 
 
-## Example Session
+## Example Live Session
 
 Start a utop session with the `Llama` module available by running `$ dune
 utop`, then enter this into the utop repl.

@@ -4,11 +4,12 @@
   (source_tree low-level-rust))
  (action
   (progn
-   (chdir low-level-rust
+   (chdir
+    low-level-rust
     (progn
      ; TODO why does source_tree not copy the .cargo directory?
      (run mv dot_cargo .cargo)
-     (run cargo build --release --offline)))
+     (run cargo build --release)))
    (run mv low-level-rust/target/release/%{target} %{target}))))
 
 (rule
@@ -27,7 +28,9 @@
 
 (rule
  (enabled_if
-  (and (<> %{system} macosx) (<> %{system} linux)))
+  (and
+   (<> %{system} macosx)
+   (<> %{system} linux)))
  (action
   (write-file library_flags.sexp "()")))
 

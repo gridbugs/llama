@@ -18,6 +18,9 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
+    - run: |
+        sudo apt update
+        sudo apt install libsdl2-dev
     - run: opam install . --deps-only --with-test
     - run: opam install -y ocamlsdl2
     - run: opam exec -- dune build

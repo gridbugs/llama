@@ -1,3 +1,0 @@
-(executable
- (public_name playground)
- (libraries lwt.unix llama llama.io llama.low_level))

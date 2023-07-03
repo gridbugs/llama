@@ -34,38 +34,63 @@ let mk_voice gate freq_hz effect_clock =
   lazy_amplifier filtered_osc ~volume:amp_env
   |> map ~f:(fun x -> Float.clamp_sym ~mag:2.0 (x *. 10.0))
 
-let mk_voices (keys : bool Signal.t Input.All_keyboard.t) ~note_for_s_key =
-  (* Subtract 1 because s is the second key in the list. This will give us one
-     note to the left of the "s" key (ie. the "a" key) which is convenient when
-     playing live. The scale also extends past an octave above the start note
-     on the right-hand side for convenience. *)
-  let base_index = Music.Note.to_midi_index note_for_s_key - 1 in
-  let key_gates_in_order =
-    [
-      keys.key_a;
-      keys.key_s;
-      keys.key_e;
-      keys.key_d;
-      keys.key_r;
-      keys.key_f;
-      keys.key_g;
-      keys.key_y;
-      keys.key_h;
-      keys.key_u;
-      keys.key_j;
-      keys.key_i;
-      keys.key_k;
-      keys.key_l;
-      keys.key_p;
-      keys.key_semicolon;
-    ]
-  in
-  let effect_clock = clock (const 8.0) in
+let mk_voices_row ~key_gates_in_order ~note_for_second_key ~effect_clock =
+  let base_index = Music.Note.to_midi_index note_for_second_key - 1 in
   sum
     (List.mapi key_gates_in_order ~f:(fun i gate ->
          let midi_index = base_index + i in
          let freq_hz = Music.frequency_hz_of_midi_index midi_index in
          mk_voice gate freq_hz effect_clock))
+
+let mk_voices (keys : bool Signal.t Input.All_keyboard.t) =
+  let effect_clock = clock (const 8.0) in
+  let top_row =
+    [
+      keys.key_q;
+      keys.key_w;
+      keys.key_3;
+      keys.key_e;
+      keys.key_4;
+      keys.key_r;
+      keys.key_t;
+      keys.key_6;
+      keys.key_y;
+      keys.key_7;
+      keys.key_u;
+      keys.key_8;
+      keys.key_i;
+      keys.key_o;
+      keys.key_0;
+      keys.key_p;
+    ]
+  in
+  let bottom_row =
+    [
+      keys.key_z;
+      keys.key_x;
+      keys.key_d;
+      keys.key_c;
+      keys.key_f;
+      keys.key_v;
+      keys.key_b;
+      keys.key_h;
+      keys.key_n;
+      keys.key_j;
+      keys.key_m;
+      keys.key_k;
+      keys.key_comma;
+      keys.key_period;
+      keys.key_semicolon;
+    ]
+  in
+  sum
+    [
+      mk_voices_row ~key_gates_in_order:top_row ~note_for_second_key:(`C, 4)
+        ~effect_clock;
+      mk_voices_row ~key_gates_in_order:bottom_row ~note_for_second_key:(`C, 3)
+        ~effect_clock
+      |> scale 0.5;
+    ]
 
 (* Removes any sharp changes from the mouse position which could cause bad
    sounds to come out of the filter controlled by the mouse *)
@@ -76,7 +101,7 @@ let mk_synth (input : (bool Signal.t, float Signal.t) Input.t) =
   let mouse_x = mouse_filter input.mouse.mouse_x in
   let mouse_y = mouse_filter input.mouse.mouse_y in
   let echo_effect signal = signal |> scale 0.6 in
-  mk_voices input.keyboard ~note_for_s_key:(`C, 3)
+  mk_voices input.keyboard
   |> chebyshev_low_pass_filter
        ~epsilon:(mouse_y |> exp_01 1.0 |> scale 10.0)
        ~cutoff_hz:(mouse_x |> exp_01 4.0 |> scale 8000.0 |> offset 100.0)

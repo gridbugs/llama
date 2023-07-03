@@ -21,8 +21,6 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
-        opam-depext-flags: ocamlsdl2
-    - run: opam install ocamlsdl2
     - run: opam install . --deps-only --with-test
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest

@@ -1,42 +1,47 @@
 (executable
  (public_name sine_wave_440hz)
  (modules sine_wave_440hz)
+ (package llama)
  (libraries llama))
 
 (executable
  (public_name from_readme)
  (modules from_readme)
+ (package llama)
  (libraries llama))
 
 (executable
  (public_name squelch)
  (modules squelch)
+ (package llama)
  (libraries llama))
 
 (executable
  (public_name echo)
  (modules echo)
+ (package llama)
  (libraries llama))
 
 (executable
  (public_name polyphonic_events)
  (modules polyphonic_events)
+ (package llama)
  (libraries llama))
 
 (executable
  (public_name random_pentatonic)
  (modules random_pentatonic)
- (optional)
- (libraries llama.graphical llama.io))
+ (package llama)
+ (libraries llama llama.io))
 
 (executable
  (public_name oscilloscope)
  (modules oscilloscope)
- (optional)
- (libraries llama.graphical))
+ (package llama_interactive)
+ (libraries llama_interactive))
 
 (executable
  (public_name interactive)
  (modules interactive)
- (optional)
- (libraries llama.graphical))
+ (package llama_interactive)
+ (libraries llama_interactive))

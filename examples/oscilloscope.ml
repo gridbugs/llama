@@ -1,4 +1,4 @@
-open Llama_graphical
+open Llama_interactive
 open Dsl
 
 let hsv_to_rgb h s v =

@@ -35,9 +35,11 @@ NOTE: Some low-level operations are done by a small rust library bundled in this
 
   ; On linux, "alsa" is a dependency of the rust package "cpal" and we can use
   ; opam to install it for us.
-  (conf-alsa (= :os linux)))
+  (conf-alsa (= :os linux))))
 
- (depopts
-  ; ocamlsdl2 is optional because it has system dependencies and it's only
-  ; needed by the llama.graphical library
+(package
+ (name llama_interactive)
+ (synopsis "Visualization and live interaction for Llama synthesizer library")
+ (depends
+  llama
   (ocamlsdl2 (>= 0.04))))

@@ -1,4 +1,4 @@
-open Llama_graphical
+open Llama_interactive
 open Dsl
 
 let mk_voice gate freq_hz effect_clock =

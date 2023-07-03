@@ -16,9 +16,6 @@ depends: [
   "conf-alsa" {os = "linux"}
   "odoc" {with-doc}
 ]
-depopts: [
-  "ocamlsdl2" {>= "0.04"}
-]
 build: [
   ["dune" "subst"] {dev}
   [

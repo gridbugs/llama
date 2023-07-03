@@ -19,5 +19,6 @@ jobs:
       with:
         ocaml-compiler: "4.14.1"
     - run: opam install . --deps-only --with-test
+    - run: opam install -y ocamlsdl2
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest

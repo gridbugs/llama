@@ -11,11 +11,26 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: stable
     - name: 'Vendor Rust Dependencies'
-    - run: |
+      run: |
         pushd src/low-level/low-level-rust
         cargo vendor
         mv .cargo/vendor_dependencies_config.toml .cargo/config.toml
+        popd
+    - name: 'Add "--offline" to cargo build flags'
+      run: sed -i 's/cargo build/cargo build --offline/' src/low-level/dune
+    - name: 'Create release artifact'
+      run: |
+        pushd ..
+        cp -r llama llama-${{ github.ref_name }}
+        tar -czf ${{ github.ref_name }}_rust-deps-vendored.tar.gz --exclude=.git llama-${{ github.ref_name }}
+        popd
+        mv ../${{ github.ref_name }}_rust-deps-vendored.tar.gz .
+    - uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifacts: "*.tar.gz"

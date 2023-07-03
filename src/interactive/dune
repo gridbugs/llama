@@ -1,6 +1,5 @@
 (library
  (public_name llama_interactive)
- (optional)
  (libraries llama lwt lwt.unix sdl2)
  (library_flags
   (-cclib -lSDL2)))

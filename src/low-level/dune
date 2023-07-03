@@ -6,10 +6,7 @@
   (progn
    (chdir
     low-level-rust
-    (progn
-     ; TODO why does source_tree not copy the .cargo directory?
-     (run mv dot_cargo .cargo)
-     (run cargo build --release)))
+    (run cargo build --release))
    (run mv low-level-rust/target/release/%{target} %{target}))))
 
 (rule

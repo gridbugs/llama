@@ -1,5 +1,7 @@
 # Language for Live Audio Module Arrangement
 
+[![test status](https://github.com/gridbugs/llama/actions/workflows/test.yml/badge.svg)](https://github.com/gridbugs/llama/actions/workflows/test.yml)
+
 *The llama is a domesticated South American camelid.*
 
 

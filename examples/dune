@@ -26,14 +26,17 @@
 (executable
  (public_name random_pentatonic)
  (modules random_pentatonic)
+ (optional)
  (libraries llama.graphical llama.io))
 
 (executable
  (public_name oscilloscope)
  (modules oscilloscope)
+ (optional)
  (libraries llama.graphical))
 
 (executable
  (public_name interactive)
  (modules interactive)
+ (optional)
  (libraries llama.graphical))

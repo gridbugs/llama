@@ -7,8 +7,11 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build-and-run-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
     steps:
     - uses: actions/checkout@v3
     - uses: hecrj/setup-rust-action@v1
@@ -18,10 +21,39 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
-    - run: |
-        sudo apt update
-        sudo apt install libsdl2-dev
+        opam-depext-flags: ocamlsdl2
+    - run: opam install ocamlsdl2
     - run: opam install . --deps-only --with-test
-    - run: opam install -y ocamlsdl2
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest
+
+  test-packaging-script:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: stable
+    - name: 'Vendor Rust Dependencies'
+      run: scripts/switch-to-vendored-rust.sh
+    - name: 'Create release artifact'
+      run: |
+        tar -czf /tmp/llama.tar.gz --exclude=.git -C .. llama
+        mkdir /tmp/empty
+        cd /tmp/empty
+    - if: matrix.os == 'ubuntu-latest'
+      name: Set-up OCaml
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: "4.14.1"
+        opam-depext-flags: ocamlsdl2,conf-alsa
+    - if: matrix.os == 'macOS-latest'
+      name: Set-up OCaml
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: "4.14.1"
+        opam-depext-flags: ocamlsdl2
+    - run: opam pin /tmp/llama.tar.gz

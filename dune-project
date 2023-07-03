@@ -41,5 +41,5 @@ NOTE: Some low-level operations are done by a small rust library bundled in this
  (name llama_interactive)
  (synopsis "Visualization and live interaction for Llama synthesizer library")
  (depends
-  llama
+  (llama (= :version))
   (ocamlsdl2 (>= 0.04))))

@@ -20,7 +20,6 @@ NOTE: Some low-level operations are done by a small rust library bundled in this
   (ocaml (and (>= "4.13.0") (< "5.0.0")))
 
   (lwt (>= 5.4))
-  (ocamlsdl2 (>= 0.04))
 
   ; Many rust users never install rust with their system package manager and
   ; instead use the rustup tool to manage rust installations. Thus we want to
@@ -36,4 +35,9 @@ NOTE: Some low-level operations are done by a small rust library bundled in this
 
   ; On linux, "alsa" is a dependency of the rust package "cpal" and we can use
   ; opam to install it for us.
-  (conf-alsa (= :os linux))))
+  (conf-alsa (= :os linux)))
+
+ (depopts
+  ; ocamlsdl2 is optional because it has system dependencies and it's only
+  ; needed by the llama.graphical library
+  (ocamlsdl2 (>= 0.04))))

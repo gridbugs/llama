@@ -3,4 +3,4 @@
 **/*.sw?
 _build
 _opam
-**/*.wav
+/*.wav

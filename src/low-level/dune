@@ -4,7 +4,11 @@
   (source_tree low-level-rust))
  (action
   (progn
-   (run cargo build --manifest-path=low-level-rust/Cargo.toml --release --offline)
+   (chdir low-level-rust
+    (progn
+     ; TODO why does source_tree not copy the .cargo directory?
+     (run mv dot_cargo .cargo)
+     (run cargo build --release --offline)))
    (run mv low-level-rust/target/release/%{target} %{target}))))
 
 (rule

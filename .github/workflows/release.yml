@@ -32,5 +32,4 @@ jobs:
         mv ../${{ github.ref_name }}_rust-deps-vendored.tar.gz .
     - uses: ncipollo/release-action@v1
       with:
-        allowUpdates: true
         artifacts: "*.tar.gz"

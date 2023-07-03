@@ -1,0 +1,21 @@
+name: release
+on:
+  push:
+    tags:
+    - '*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: stable
+    - name: 'Vendor Rust Dependencies'
+    - run: |
+        pushd src/low-level/low-level-rust
+        cargo vendor
+        mv .cargo/vendor_dependencies_config.toml .cargo/config.toml

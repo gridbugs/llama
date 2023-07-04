@@ -1,3 +1,5 @@
+open Llama_core
+
 type t
 
 val create : ?downsample:int -> ?initial_signal:float Signal.t -> unit -> t

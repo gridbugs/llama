@@ -1,3 +1,7 @@
+include module type of struct
+  include Llama_core
+end
+
 module Live : sig
   val go : unit -> float Signal.t ref
 

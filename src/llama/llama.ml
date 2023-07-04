@@ -1,3 +1,5 @@
+include Llama_core
+
 module Live = struct
   let go () =
     Llama_low_level.System.env_logger_init ();
@@ -16,10 +18,4 @@ let play_signal_lwt ?(downsample = 1) ?(scale_output_volume = 1.0) signal =
 let play_signal ?(downsample = 1) ?(scale_output_volume = 1.0) signal =
   Lwt_main.run (play_signal_lwt ~downsample ~scale_output_volume signal)
 
-module Dsl = Dsl
 module Signal_player = Signal_player
-module Signal = Signal
-module Float = Float
-module Music = Music
-module List = List
-module Array = Array

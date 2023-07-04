@@ -1,3 +1,4 @@
+open Llama_core
 module Ctx = Signal.Ctx
 module Output_stream = Llama_low_level.Output_stream
 

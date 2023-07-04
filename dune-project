@@ -11,7 +11,9 @@
 (package
  (name llama_core)
  (synopsis "Core types and operations for the Llama synthesizer library")
- (description "Core types and operations for Llama. This is separate from the llama package so that other packages can be written which define new synthesizer modules based on llama without needing to depend on additional packages required by llama to interact with the sound card."))
+ (description "Core types and operations for Llama. This is separate from the llama package so that other packages can be written which define new synthesizer modules based on llama without needing to depend on additional packages required by llama to interact with the sound card.")
+ (depends
+  (ppx_inline_test :with-test)))
 
 (package
  (name llama)

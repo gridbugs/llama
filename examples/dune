@@ -45,3 +45,9 @@
  (modules interactive)
  (package llama_interactive)
  (libraries llama_interactive))
+
+(executable
+ (public_name midi)
+ (modules midi)
+ (package llama_interactive)
+ (libraries llama_interactive))

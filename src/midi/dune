@@ -1,5 +1,5 @@
 (library
  (name llama_midi)
- (public_name llama.midi)
+ (public_name llama_core.midi)
  (inline_tests)
  (preprocess (pps ppx_inline_test)))

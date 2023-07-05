@@ -1,3 +1,3 @@
 (library
  (public_name llama_core)
- (libraries llama.midi))
+ (libraries llama_core.midi))

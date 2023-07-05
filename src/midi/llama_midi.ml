@@ -263,7 +263,7 @@ module Track = struct
         | Ok (Meta_event End_of_track) -> return (event :: acc)
         | _ -> loop (event :: acc) (rem_length - 1) (Some running_status)
     in
-    loop [] length None
+    loop [] length None >>| List.rev
 end
 
 module Chunk = struct

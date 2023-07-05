@@ -21,6 +21,8 @@ end
 
 module Event : sig
   type t = { delta_time : int; message : (Message.t, Unimplemented.t) result }
+
+  val to_string : t -> string
 end
 
 module Track : sig

@@ -10,7 +10,6 @@ homepage: "https://github.com/gridbugs/llama"
 bug-reports: "https://github.com/gridbugs/llama/issues"
 depends: [
   "dune" {>= "3.0"}
-  "ppx_inline_test" {with-test}
   "odoc" {with-doc}
 ]
 build: [

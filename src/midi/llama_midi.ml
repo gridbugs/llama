@@ -261,7 +261,9 @@ module Track = struct
         in
         match event.message with
         | Ok (Meta_event End_of_track) -> return (event :: acc)
-        | _ -> loop (event :: acc) (rem_length - 1) (Some running_status)
+        | _ ->
+            (loop [@tailcall]) (event :: acc) (rem_length - 1)
+              (Some running_status)
     in
     loop [] length None >>| List.rev
 end
@@ -335,7 +337,7 @@ module File_reader = struct
     let channel = open_in_bin t.path in
     let rec loop acc =
       match input_char channel with
-      | byte -> loop (byte :: acc)
+      | byte -> (loop [@tailcall]) (byte :: acc)
       | exception End_of_file -> List.rev acc
     in
     let byte_list = loop [] in

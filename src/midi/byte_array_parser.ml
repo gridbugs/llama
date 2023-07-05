@@ -31,7 +31,7 @@ let repeat_until_relative_index_offset_exact offset t a i =
       raise (Parse_exception "Buffer region not aligned to contents")
     else
       let x, i = t a i in
-      loop (x :: acc) i
+      (loop [@tailcall]) (x :: acc) i
   in
   let xs, i = loop [] i in
   (List.rev xs, i)
@@ -41,7 +41,7 @@ let repeat_until_end_exact t a i =
     if i >= Array.length a then (acc, i)
     else
       let x, i = t a i in
-      loop (x :: acc) i
+      (loop [@tailcall]) (x :: acc) i
   in
   let xs, i = loop [] i in
   (List.rev xs, i)
@@ -90,7 +90,8 @@ let variable_length_quantity a i =
       let mask = 0x80 in
       let this_byte_value = this_byte land lnot mask in
       let acc = (acc lsl 7) lor this_byte_value in
-      if this_byte land mask == 0 then (acc, i) else loop acc (count + 1) i
+      if this_byte land mask == 0 then (acc, i)
+      else (loop [@tailcall]) acc (count + 1) i
   in
   loop 0 0 i
 

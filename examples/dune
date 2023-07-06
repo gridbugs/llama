@@ -17,8 +17,8 @@
  (libraries llama))
 
 (executable
- (public_name echo)
- (modules echo)
+ (public_name echo_effect)
+ (modules echo_effect)
  (package llama)
  (libraries llama))
 

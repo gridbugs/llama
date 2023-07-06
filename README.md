@@ -19,7 +19,7 @@ ocaml repl environments to perform music live.
 Videos showing off some of the example programs:
 - [polyphonic_events](https://youtu.be/o-XPH1j0NqE)
 - [random_pentatonic](https://youtu.be/wfmmdRo_ytU)
-- [echo](https://youtu.be/1ndhPlvDBH8)
+- [echo_effect](https://youtu.be/1ndhPlvDBH8)
 - [interactive](https://youtu.be/O8oc7MhG4uE)
 - [midi_player](https://youtu.be/A8a1Dem2eKs)
 
@@ -35,7 +35,7 @@ Then you should be able to build and some example programs:
 ```
 $ dune exec ./examples/polyphonic_events.exe
 $ dune exec ./examples/random_pentatonic.exe
-$ dune exec ./examples/echo.exe
+$ dune exec ./examples/echo_effect.exe
 ```
 
 

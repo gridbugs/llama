@@ -21,7 +21,12 @@
  (enabled_if
   (= %{system} linux))
  (action
-  (write-file library_flags.sexp "(-cclib -lasound)")))
+  (with-stdout-to
+   library_flags.sexp
+   (progn
+    (echo "(")
+    (bash "pkg-config --libs alsa | xargs -n1 echo -cclib")
+    (echo ")")))))
 
 (rule
  (enabled_if

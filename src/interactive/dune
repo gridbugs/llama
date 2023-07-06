@@ -1,5 +1,14 @@
+(rule
+ (action
+  (with-stdout-to
+   library_flags.sexp
+   (progn
+    (echo "(")
+    (bash "pkg-config --libs sdl2 | xargs -n1 echo -cclib")
+    (echo ")")))))
+
 (library
  (public_name llama_interactive)
  (libraries llama lwt lwt.unix sdl2)
  (library_flags
-  (-cclib -lSDL2)))
+  (:include library_flags.sexp)))

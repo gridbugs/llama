@@ -13,7 +13,7 @@ depends: [
   "llama_core" {= version}
   "ocaml" {>= "4.13.0" & < "5.0.0"}
   "lwt" {>= "5.4"}
-  "conf-rust-2021"
+  "conf-rust-2021" {build}
   "conf-alsa" {os = "linux"}
   "odoc" {with-doc}
 ]

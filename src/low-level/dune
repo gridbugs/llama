@@ -24,9 +24,9 @@
   (with-stdout-to
    library_flags.sexp
    (progn
-    (echo "(")
-    (bash "pkg-config --libs alsa | xargs -n1 echo -cclib")
-    (echo ")")))))
+    (echo "( -cclib \"")
+    (run pkg-config --libs alsa)
+    (echo "\")")))))
 
 (rule
  (enabled_if

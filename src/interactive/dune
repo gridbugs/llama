@@ -3,9 +3,9 @@
   (with-stdout-to
    library_flags.sexp
    (progn
-    (echo "(")
-    (bash "pkg-config --libs sdl2 | xargs -n1 echo -cclib")
-    (echo ")")))))
+    (echo "( -cclib \"")
+    (run pkg-config --libs sdl2)
+    (echo "\")")))))
 
 (library
  (public_name llama_interactive)

@@ -46,22 +46,30 @@ let repeat_until_end_exact t a i =
   let xs, i = loop [] i in
   (List.rev xs, i)
 
-let read_seq4_at a index = Seq.init 4 (fun i -> Array.get a (index + i))
-let read_seq2_at a index = Seq.init 2 (fun i -> Array.get a (index + i))
-let read_string4_at a index = read_seq4_at a index |> String.of_seq
+let read_string n a index =
+  let[@tail_mod_cons] rec loop i =
+    if i == n then [] else Array.get a (index + i) :: loop (i + 1)
+  in
+  loop 0 |> List.to_seq |> String.of_seq
 
-let read_int32be_at a index =
-  read_seq4_at a index
-  |> Seq.fold_lefti (fun acc i ch -> acc + (int_of_char ch lsl ((3 - i) * 8))) 0
+let read_string4 = read_string 4
 
-let read_int16be_at a index =
-  read_seq2_at a index
-  |> Seq.fold_lefti (fun acc i ch -> acc + (int_of_char ch lsl ((1 - i) * 8))) 0
+let read_int_be n a index =
+  let rec loop acc i =
+    if i == n then acc
+    else
+      let byte = int_of_char (Array.get a (index + i)) in
+      let value = (acc lsl 8) lor byte in
+      loop value (i + 1)
+  in
+  loop 0 0
 
+let read_int32be = read_int_be 4
+let read_int16be = read_int_be 2
 let read_byte a index = int_of_char (Array.get a index)
-let string4 a i = (read_string4_at a i, i + 4)
-let int32be a i = (read_int32be_at a i, i + 4)
-let int16be a i = (read_int16be_at a i, i + 2)
+let string4 a i = (read_string4 a i, i + 4)
+let int32be a i = (read_int32be a i, i + 4)
+let int16be a i = (read_int16be a i, i + 2)
 let byte a i = (read_byte a i, i + 1)
 let peek_byte a i = (read_byte a i, i)
 

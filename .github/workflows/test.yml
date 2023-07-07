@@ -21,6 +21,7 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
+        opam-depext-flags: tsdl,conf-pkg-config,conf-alsa
     - run: opam install . --deps-only --with-test
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest
@@ -47,7 +48,7 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
-        opam-depext-flags: ocamlsdl2,conf-alsa
+        opam-depext-flags: tsdl,conf-pkg-config,conf-alsa
     - if: matrix.os == 'macOS-latest'
       name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2

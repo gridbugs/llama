@@ -17,15 +17,14 @@ jobs:
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: stable
+    - if: matrix.os == 'ubuntu-latest'
+      name: 'Run "apt update" so setup-ocaml can install depexts (ubuntu)'
+      run: |
+        sudo apt update
     - name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
-    - if: matrix.os == 'ubuntu-latest'
-      name: 'Install dependencies (ubuntu)'
-      run: |
-        sudo apt update
-        sudo apt install libasound2-dev libsdl2-dev
     - run: opam install . --deps-only --with-test
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest
@@ -48,20 +47,19 @@ jobs:
         mkdir /tmp/empty
         cd /tmp/empty
     - if: matrix.os == 'ubuntu-latest'
+      name: 'Run "apt update" so setup-ocaml can install depexts (ubuntu)'
+      run: |
+        sudo apt update
+    - if: matrix.os == 'ubuntu-latest'
       name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
         opam-depext-flags: tsdl,conf-pkg-config,conf-alsa
-    - if: matrix.os == 'ubuntu-latest'
-      name: 'Install dependencies (ubuntu)'
-      run: |
-        sudo apt update
-        sudo apt install libasound2-dev libsdl2-dev
     - if: matrix.os == 'macOS-latest'
       name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: "4.14.1"
-        opam-depext-flags: ocamlsdl2
+        opam-depext-flags: tsdl
     - run: opam pin /tmp/llama.tar.gz

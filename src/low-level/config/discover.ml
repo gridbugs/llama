@@ -4,10 +4,10 @@ let macos_library_flags =
   let frameworks =
     [ "CoreServices"; "CoreAudio"; "AudioUnit"; "AudioToolbox" ]
   in
-  let cclib_arg =
-    List.map (Printf.sprintf "-framework %s") frameworks |> String.concat " "
-  in
-  [ "-cclib"; Printf.sprintf "\"%s\"" cclib_arg ]
+  [
+    "-cclib";
+    List.map (Printf.sprintf "-framework %s") frameworks |> String.concat " ";
+  ]
 
 let () =
   C.main ~name:"llama_low_level" (fun _c ->

@@ -4,11 +4,22 @@ let macos_library_flags =
   let frameworks =
     [ "CoreServices"; "CoreAudio"; "AudioUnit"; "AudioToolbox" ]
   in
-  [
-    "-cclib";
-    List.map (Printf.sprintf "-framework %s") frameworks |> String.concat " ";
-  ]
+  List.map (Printf.sprintf "-framework %s") frameworks
 
 let () =
-  C.main ~name:"llama_low_level" (fun _c ->
-      C.Flags.write_sexp "library_flags.sexp" macos_library_flags)
+  C.main ~name:"llama_low_level" (fun c ->
+      let linker_args =
+        match C.ocaml_config_var_exn c "system" with
+        | "macos" -> macos_library_flags
+        | "linux" -> (
+            let default = [ "-lasound" ] in
+            match C.Pkg_config.get c with
+            | None -> default
+            | Some pc -> (
+                match C.Pkg_config.query pc ~package:"alsa" with
+                | None -> default
+                | Some conf -> conf.libs))
+        | _ -> []
+      in
+      let cclib_arg = String.concat " " linker_args in
+      C.Flags.write_sexp "library_flags.sexp" [ "-cclib"; cclib_arg ])

@@ -11,29 +11,8 @@
 
 (rule
  (target library_flags.sexp)
- (enabled_if
-  (= %{system} macosx))
  (action
   (run ./config/discover.exe)))
-
-(rule
- (enabled_if
-  (= %{system} linux))
- (action
-  (with-stdout-to
-   library_flags.sexp
-   (progn
-    (echo "( -cclib \"")
-    (run pkg-config --libs alsa)
-    (echo "\")")))))
-
-(rule
- (enabled_if
-  (and
-   (<> %{system} macosx)
-   (<> %{system} linux)))
- (action
-  (write-file library_flags.sexp "()")))
 
 (library
  (name llama_low_level)

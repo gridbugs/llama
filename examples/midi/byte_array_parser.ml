@@ -73,13 +73,12 @@ let int16be a i = (read_int16be a i, i + 2)
 let byte a i = (read_byte a i, i + 1)
 let peek_byte a i = (read_byte a i, i)
 
-let byte_msb0 ~message =
+let byte_msb0 =
   let+ byte = byte in
   if byte > 127 then
     raise
       (Parse_exception
-         (Printf.sprintf "Expected byte with bit 7 set to 0 but got %d: (%s)"
-            byte message));
+         (Printf.sprintf "Expected byte with bit 7 set to 0 but got %d" byte));
   byte
 
 let n_bytes n a i =

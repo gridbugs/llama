@@ -132,30 +132,25 @@ module Channel_voice_message = struct
     let+ message =
       match message_type_identifier with
       | 0 ->
-          let+ note = byte_msb0 ~message:"note"
-          and+ velocity = byte_msb0 ~message:"velocity" in
+          let+ note = byte_msb0 and+ velocity = byte_msb0 in
           Ok (Note_off { note; velocity })
       | 1 ->
-          let+ note = byte_msb0 ~message:"note"
-          and+ velocity = byte_msb0 ~message:"velocity" in
+          let+ note = byte_msb0 and+ velocity = byte_msb0 in
           Ok (Note_on { note; velocity })
       | 2 ->
-          let+ _note = byte_msb0 ~message:"note"
-          and+ _pressure = byte_msb0 ~message:"pressure" in
+          let+ _note = byte_msb0 and+ _pressure = byte_msb0 in
           Error (Unimplemented "Polyphonic_key_pressure")
       | 3 ->
-          let+ _controller = byte_msb0 ~message:"controller"
-          and+ _value = byte_msb0 ~message:"value" in
+          let+ _controller = byte_msb0 and+ _value = byte_msb0 in
           Error (Unimplemented "Control_change")
       | 4 ->
-          let+ _program = byte_msb0 ~message:"program" in
+          let+ _program = byte_msb0 in
           Error (Unimplemented "Program_change")
       | 5 ->
-          let+ _pressure = byte_msb0 ~message:"pressure" in
+          let+ _pressure = byte_msb0 in
           Error (Unimplemented "Channel_pressure")
       | 6 ->
-          let+ _low_bits = byte_msb0 ~message:"low_bits"
-          and+ _high_bits = byte_msb0 ~message:"high_bits" in
+          let+ _low_bits = byte_msb0 and+ _high_bits = byte_msb0 in
           Error (Unimplemented "Pitch_wheel_change")
       | other ->
           raise

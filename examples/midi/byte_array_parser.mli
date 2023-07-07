@@ -19,7 +19,7 @@ val int32be : int t
 val int16be : int t
 val byte : int t
 val peek_byte : int t
-val byte_msb0 : message:string -> int t
+val byte_msb0 : int t
 val n_bytes : int -> char array t
 val variable_length_quantity : int t
 val run : 'a t -> char array -> 'a

@@ -29,6 +29,9 @@
 
   (conf-rust-2021 :build)
 
+  (conf-pkg-config (and :build (= :os linux)))
+  (dune-configurator :build)
+
   ; On linux, "alsa" is a dependency of the rust package "cpal" and we can use
   ; opam to install it for us.
   (conf-alsa (= :os linux))))

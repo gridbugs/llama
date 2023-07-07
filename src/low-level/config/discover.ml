@@ -10,7 +10,7 @@ let () =
   C.main ~name:"llama_low_level" (fun c ->
       let linker_args =
         match C.ocaml_config_var_exn c "system" with
-        | "macos" -> macos_library_flags
+        | "macosx" -> macos_library_flags
         | "linux" -> (
             let default = [ "-lasound" ] in
             match C.Pkg_config.get c with

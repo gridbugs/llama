@@ -9,7 +9,7 @@ bug-reports: "https://github.com/gridbugs/llama/issues"
 depends: [
   "dune" {>= "3.0"}
   "llama" {= version}
-  "ocamlsdl2" {>= "0.04"}
+  "tsdl" {>= "1"}
   "conf-pkg-config" {build}
   "odoc" {with-doc}
 ]

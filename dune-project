@@ -38,5 +38,5 @@
  (synopsis "Visualization and live interaction for Llama synthesizer library")
  (depends
   (llama (= :version))
-  (ocamlsdl2 (>= 0.04))
+  (tsdl (>= 1))
   (conf-pkg-config :build)))

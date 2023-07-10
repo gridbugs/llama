@@ -51,7 +51,7 @@ module Sequencer = struct
             Signal.sample track_signal ctx
             |> List.filter_map ~f:(fun (event : Event.t) ->
                    match event.message with
-                   | Ok (Message.Channel_voice_message voice_message) ->
+                   | Message.Channel_voice_message voice_message ->
                        Some voice_message.message
                    | _ -> None)
           in
@@ -83,7 +83,8 @@ module Sequencer = struct
                     (* Store the mapping from voice to note so if another note takes this
                        voice it can update the fact the the current note no longer holds
                        it. *)
-                    Array.set voices voice_index { note; gate = true })))
+                    Array.set voices voice_index { note; gate = true })
+            | _ -> ()))
     in
     List.init ~len:num_voices ~f:(fun i ->
         let frequency_hz =
@@ -189,4 +190,4 @@ let () =
           ~sample_to_rgba_01:(Fun.const (0.6, 0.5, 0.2, 1.0))
           window signal
       in
-      play_signal ~scale_output_volume:0.1 viz'd_signal)
+      play_signal ~scale_output_volume:0.01 viz'd_signal)

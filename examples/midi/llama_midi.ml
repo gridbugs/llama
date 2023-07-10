@@ -6,12 +6,7 @@ module Unknown = struct
   type t = Unknown of string
 end
 
-module Unimplemented = struct
-  type t = Unimplemented of string
-end
-
 open Unknown
-open Unimplemented
 
 module Chunk_type = struct
   type t = Header | Track
@@ -106,22 +101,63 @@ end
 
 module Channel_voice_message = struct
   type note_event = { note : int; velocity : int }
-  type message = Note_off of note_event | Note_on of note_event
+  type polyphonic_key_pressure = { note : int; pressure : int }
+  type control_change = { controller : int; value : int }
+  type program_change = { program : int }
+  type channel_pressure = { pressure : int }
+  type pitch_wheel_change = { signed_value : int }
+
+  type message =
+    | Note_off of note_event
+    | Note_on of note_event
+    | Polyphonic_key_pressure of polyphonic_key_pressure
+    | Control_change of control_change
+    | Program_change of program_change
+    | Channel_pressure of channel_pressure
+    | Pitch_wheel_change of pitch_wheel_change
+
   type t = { channel : int; message : message }
 
   let note_event_to_string { note; velocity } =
     sprintf "((note %d) (velocity %d))" note velocity
+
+  let polyphonic_key_pressure_to_string { note; pressure } =
+    sprintf "((note %d) (pressure %d))" note pressure
+
+  let control_change_to_string { controller; value } =
+    sprintf "((controller %d) (value %d))" controller value
+
+  let program_change_to_string { program } = sprintf "((program %d))" program
+
+  let channel_pressure_to_string { pressure } =
+    sprintf "((pressure %d))" pressure
+
+  let pitch_wheel_change_to_string { signed_value } =
+    sprintf "((signed_value %d))" signed_value
 
   let message_to_string = function
     | Note_off note_event ->
         sprintf "(Note_off %s)" (note_event_to_string note_event)
     | Note_on note_event ->
         sprintf "(Note_on %s)" (note_event_to_string note_event)
+    | Polyphonic_key_pressure polyphonic_key_pressure ->
+        sprintf "(Polyphonic_key_pressure %s)"
+          (polyphonic_key_pressure_to_string polyphonic_key_pressure)
+    | Control_change control_change ->
+        sprintf "(Control_change %s)" (control_change_to_string control_change)
+    | Program_change program_change ->
+        sprintf "(Program_change %s)" (program_change_to_string program_change)
+    | Channel_pressure channel_pressure ->
+        sprintf "(Channel_pressure %s)"
+          (channel_pressure_to_string channel_pressure)
+    | Pitch_wheel_change pitch_wheel_change ->
+        sprintf "(Pitch_wheel_change %s)"
+          (pitch_wheel_change_to_string pitch_wheel_change)
 
   let to_string { channel; message } =
     sprintf "((channel %d) (message %s))" channel (message_to_string message)
 
-  let parse_result status =
+  let parse status =
     if status < 0 || status > 255 then raise (Parse_exception "Expected byte");
     if status < 128 then
       raise (Parse_exception "Expected most significant bit to be 1");
@@ -133,31 +169,121 @@ module Channel_voice_message = struct
       match message_type_identifier with
       | 0 ->
           let+ note = byte_msb0 and+ velocity = byte_msb0 in
-          Ok (Note_off { note; velocity })
+          Note_off { note; velocity }
       | 1 ->
           let+ note = byte_msb0 and+ velocity = byte_msb0 in
-          Ok (Note_on { note; velocity })
+          Note_on { note; velocity }
       | 2 ->
-          let+ _note = byte_msb0 and+ _pressure = byte_msb0 in
-          Error (Unimplemented "Polyphonic_key_pressure")
+          let+ note = byte_msb0 and+ pressure = byte_msb0 in
+          Polyphonic_key_pressure { note; pressure }
       | 3 ->
-          let+ _controller = byte_msb0 and+ _value = byte_msb0 in
-          Error (Unimplemented "Control_change")
+          let+ controller = byte_msb0 and+ value = byte_msb0 in
+          Control_change { controller; value }
       | 4 ->
-          let+ _program = byte_msb0 in
-          Error (Unimplemented "Program_change")
+          let+ program = byte_msb0 in
+          Program_change { program }
       | 5 ->
-          let+ _pressure = byte_msb0 in
-          Error (Unimplemented "Channel_pressure")
+          let+ pressure = byte_msb0 in
+          Channel_pressure { pressure }
       | 6 ->
-          let+ _low_bits = byte_msb0 and+ _high_bits = byte_msb0 in
-          Error (Unimplemented "Pitch_wheel_change")
+          let+ low_bits = byte_msb0 and+ high_bits = byte_msb0 in
+          let value_14_bits = low_bits lor (high_bits lsl 7) in
+          let signed_value = value_14_bits - 0x2000 in
+          Pitch_wheel_change { signed_value }
       | other ->
           raise
             (Parse_exception
                (sprintf "Unexpected message type identifier: %d" other))
     in
-    Result.map (fun message -> { channel; message }) message
+    { channel; message }
+end
+
+module System_message = struct
+  type system_exclusive = { manufacturer_id : int; payload : int list }
+
+  let system_exclusive_to_string { manufacturer_id; payload } =
+    sprintf "((manufacturer_id %d) (payload (%s)))" manufacturer_id
+      (String.concat " " (List.map string_of_int payload))
+
+  let system_exclusive_parse =
+    let system_exclusive_end = 0b11110111 in
+    let open Byte_array_parser in
+    let rec loop acc =
+      let* byte = byte in
+      if byte == system_exclusive_end then return acc
+      else if byte land (1 lsl 7) <> 0 then
+        raise
+          (Parse_exception
+             "Most significant bit is 1 but byte does not encode 'System \
+              Exclusive End'")
+      else loop (byte :: acc)
+    in
+    let+ manufacturer_id = byte_msb0 and+ payload = loop [] >>| List.rev in
+    { manufacturer_id; payload }
+
+  type t =
+    | System_exclusive of system_exclusive
+    | Song_position_pointer of int
+    | Song_select of int
+    | Tune_request
+    | Timing_clock
+    | Start
+    | Continue
+    | Stop
+    | Active_sensing
+    | Reset
+    | Undefined of int
+
+  let to_string = function
+    | System_exclusive system_exclusive ->
+        sprintf "(System_exclusive %s)"
+          (system_exclusive_to_string system_exclusive)
+    | Song_position_pointer song_position_pointer ->
+        sprintf "(Song_position_pointer %d)" song_position_pointer
+    | Song_select song_select -> sprintf "(Song_select %d)" song_select
+    | Tune_request -> "Tune_request"
+    | Timing_clock -> "Timing_clock"
+    | Start -> "Start"
+    | Continue -> "Continue"
+    | Stop -> "Stop"
+    | Active_sensing -> "Active_sensing"
+    | Reset -> "Reset"
+    | Undefined undefined -> sprintf "(Undefined %d)" undefined
+
+  let parse status =
+    if status < 0 || status > 255 then raise (Parse_exception "Expected byte");
+    if status lsr 4 <> 0xF then
+      raise (Parse_exception "Expected top 4 bits to be 0xF");
+    let message_type_identifier = status land 0xF in
+    let open Byte_array_parser in
+    match message_type_identifier with
+    | 1 | 4 | 5 | 9 | 13 -> return (Undefined message_type_identifier)
+    | 0 ->
+        let+ system_exclusive = system_exclusive_parse in
+        System_exclusive system_exclusive
+    | 2 ->
+        let+ low = byte_msb0 and+ high = byte_msb0 in
+        let value_14_bits = low lor (high lsl 7) in
+        Song_position_pointer value_14_bits
+    | 3 ->
+        let+ song_select = byte_msb0 in
+        Song_select song_select
+    | 6 -> return Tune_request
+    | 7 ->
+        raise
+          (Parse_exception
+             "Encountered 'System Exclusive End' without corresponding 'System \
+              Exclusive'")
+    | 8 -> return Timing_clock
+    | 10 -> return Start
+    | 11 -> return Continue
+    | 12 -> return Stop
+    | 14 -> return Active_sensing
+    | 15 -> return Reset
+    | other ->
+        raise
+          (Parse_exception
+             (sprintf "Unexpected message type identifier: %d" other))
 end
 
 module Meta_event = struct
@@ -182,42 +308,40 @@ end
 module Message = struct
   type t =
     | Channel_voice_message of Channel_voice_message.t
+    | System_message of System_message.t
     | Meta_event of Meta_event.t
 
   let to_string = function
     | Channel_voice_message channel_voice_message ->
         sprintf "(Channel_voice_message %s)"
           (Channel_voice_message.to_string channel_voice_message)
+    | System_message system_message ->
+        sprintf "(System_message %s)" (System_message.to_string system_message)
     | Meta_event meta_event ->
         sprintf "(Meta_event %s)" (Meta_event.to_string meta_event)
 
-  let parse_result status =
+  let parse status =
     let open Byte_array_parser in
     if status < 0 || status > 255 then raise (Parse_exception "Expected byte");
     if status < 128 then
       raise (Parse_exception "Expected most significant bit to be 1");
     if status == 255 then
-      Meta_event.parse >>| fun meta_event -> Ok (Meta_event meta_event)
+      Meta_event.parse >>| fun meta_event -> Meta_event meta_event
     else
       let message_type_identifier = (status lsr 4) land 0x7 in
       if message_type_identifier == 7 then
-        return (Error (Unimplemented "System_message"))
+        let+ system_message = System_message.parse status in
+        System_message system_message
       else
-        Channel_voice_message.parse_result status
-        >>| Result.map (fun channel_voice_message ->
-                Channel_voice_message channel_voice_message)
+        let+ channel_voice_message = Channel_voice_message.parse status in
+        Channel_voice_message channel_voice_message
 end
 
 module Event = struct
-  type t = { delta_time : int; message : (Message.t, Unimplemented.t) result }
+  type t = { delta_time : int; message : Message.t }
 
   let to_string { delta_time; message } =
-    let message_string =
-      match message with
-      | Ok message -> Message.to_string message
-      | Error (Unimplemented unimplemented) ->
-          sprintf "(Unimplemented %s)" unimplemented
-    in
+    let message_string = Message.to_string message in
     sprintf "((delta_time %d) (message %s))" delta_time message_string
 
   let parse_result running_status =
@@ -232,7 +356,7 @@ module Event = struct
         | Some running_status -> return running_status
         | None -> raise (Parse_exception "First event in track lacks status")
     in
-    let+ message = Message.parse_result status in
+    let+ message = Message.parse status in
     ({ delta_time; message }, `Status status)
 end
 
@@ -255,7 +379,7 @@ module Track = struct
           Event.parse_result running_status
         in
         match event.message with
-        | Ok (Meta_event End_of_track) -> return (event :: acc)
+        | Meta_event End_of_track -> return (event :: acc)
         | _ ->
             (loop [@tailcall]) (event :: acc) (rem_length - 1)
               (Some running_status)

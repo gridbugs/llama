@@ -43,6 +43,8 @@ end
 
 module Header : sig
   type t = { format_ : Format.t; division : Division.t }
+
+  val to_string : t -> string
 end
 
 module Data : sig

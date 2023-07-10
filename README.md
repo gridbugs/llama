@@ -43,9 +43,10 @@ $ dune exec ./examples/echo_effect.exe
 
 ![Screenshot showing an oscilloscope rendering of an audio waveform](img/screenshot.png)
 
-Run `dune exec examples/interactive.exe` and then use the top two rows of
-letter keys on your keyboard to play music. The mouse position controls the
-frequency cutoff and resonance of a low-pass filter. Hack
+Run `dune exec examples/interactive.exe` and then use your computer's keyboard
+to play music. The top and bottom rows of letters are the white keys and the
+number row and middle row of letters are the black keys. The mouse position
+controls the frequency cutoff and resonance of a low-pass filter. Hack
 examples/interactive.ml to change how it sounds!
 
 

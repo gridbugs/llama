@@ -25,7 +25,7 @@ jobs:
     - name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2
       with:
-        ocaml-compiler: matrix.ocaml
+        ocaml-compiler: ${{ matrix.ocaml }}
     - run: opam install . --deps-only --with-test
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest
@@ -56,12 +56,12 @@ jobs:
       name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2
       with:
-        ocaml-compiler: matrix.ocaml
+        ocaml-compiler: ${{ matrix.ocaml }}
         opam-depext-flags: tsdl,conf-pkg-config,conf-alsa
     - if: matrix.os == 'macOS-latest'
       name: Set-up OCaml
       uses: ocaml/setup-ocaml@v2
       with:
-        ocaml-compiler: matrix.ocaml
+        ocaml-compiler: ${{ matrix.ocaml }}
         opam-depext-flags: tsdl
     - run: opam pin /tmp/llama.tar.gz

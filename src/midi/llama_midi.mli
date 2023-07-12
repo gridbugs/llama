@@ -87,8 +87,6 @@ end
 
 module Header : sig
   type t = { format_ : Format.t; division : Division.t }
-
-  val to_string : t -> string
 end
 
 module Data : sig
@@ -102,4 +100,11 @@ module File_reader : sig
 
   val of_path : string -> t
   val read : t -> Data.t
+end
+
+module File_writer : sig
+  type t
+
+  val of_path : string -> t
+  val write : t -> Data.t -> unit
 end

@@ -49,3 +49,12 @@ module Output_stream = struct
 
   external send_sample : t -> float -> unit = "send_sample"
 end
+
+module Midi_input = struct
+  type t
+
+  external create : unit -> t = "create_midi_input"
+  external enumerate_midi_ports_raw : t -> string array = "enumerate_midi_ports"
+
+  let enumerate_midi_ports t = enumerate_midi_ports_raw t |> Array.to_list
+end

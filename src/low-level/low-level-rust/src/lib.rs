@@ -3,6 +3,7 @@ use cpal::{
     Device, OutputCallbackInfo, SizedSample, Stream, StreamConfig,
 };
 use hound::WavReader;
+use midir::{MidiInput, MidiInputPorts};
 use std::{
     fs::File,
     io::BufReader,
@@ -212,4 +213,38 @@ pub fn read_wav_file_mono(path: String) -> Vec<f32> {
         })
         .collect::<Vec<_>>();
     data_f32
+}
+
+pub struct MidiInputOcaml {
+    midi_input: MidiInput,
+    ports: MidiInputPorts,
+}
+
+unsafe extern "C" fn midi_input_finalizer(v: ocaml::Raw) {
+    let ptr = v.as_pointer::<MidiInputOcaml>();
+    ptr.drop_in_place()
+}
+ocaml::custom_finalize!(MidiInputOcaml, midi_input_finalizer);
+
+#[ocaml::func]
+pub fn create_midi_input() -> ocaml::Pointer<MidiInputOcaml> {
+    let midi_input =
+        MidiInput::new("midir reading input").expect("failed to create MidiInput object");
+    let ports = midi_input.ports();
+    ocaml::Pointer::alloc_custom(MidiInputOcaml { midi_input, ports })
+}
+
+#[ocaml::func]
+pub fn enumerate_midi_ports(midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>) -> Vec<String> {
+    let midi_input = &midi_input_ocaml.as_ref().midi_input;
+    midi_input_ocaml
+        .as_ref()
+        .ports
+        .iter()
+        .map(|port| {
+            midi_input
+                .port_name(port)
+                .expect("failed to get name of midi port")
+        })
+        .collect()
 }

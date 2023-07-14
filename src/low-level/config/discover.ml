@@ -2,7 +2,7 @@ module C = Configurator.V1
 
 let macos_library_flags =
   let frameworks =
-    [ "CoreServices"; "CoreAudio"; "AudioUnit"; "AudioToolbox" ]
+    [ "CoreServices"; "CoreAudio"; "CoreMidi"; "AudioUnit"; "AudioToolbox" ]
   in
   List.map (Printf.sprintf "-framework %s") frameworks
 

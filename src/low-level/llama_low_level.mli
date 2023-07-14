@@ -16,3 +16,10 @@ module Output_stream : sig
   val samples_behind : t -> int
   val send_sample : t -> float -> unit
 end
+
+module Midi_input : sig
+  type t
+
+  val create : unit -> t
+  val enumerate_midi_ports : t -> string list
+end

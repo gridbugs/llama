@@ -3,7 +3,7 @@ use cpal::{
     Device, OutputCallbackInfo, SizedSample, Stream, StreamConfig,
 };
 use hound::WavReader;
-use midir::{MidiInput, MidiInputPorts};
+use midir::{MidiInput, MidiInputConnection, MidiInputPorts};
 use std::{
     fs::File,
     io::BufReader,
@@ -216,8 +216,11 @@ pub fn read_wav_file_mono(path: String) -> Vec<f32> {
 }
 
 pub struct MidiInputOcaml {
-    midi_input: MidiInput,
+    midi_input: Option<MidiInput>,
     ports: MidiInputPorts,
+    port_names: Vec<String>,
+    connection: Option<MidiInputConnection<()>>,
+    receiver: Option<mpsc::Receiver<Vec<u8>>>,
 }
 
 unsafe extern "C" fn midi_input_finalizer(v: ocaml::Raw) {
@@ -231,20 +234,106 @@ pub fn create_midi_input() -> ocaml::Pointer<MidiInputOcaml> {
     let midi_input =
         MidiInput::new("midir reading input").expect("failed to create MidiInput object");
     let ports = midi_input.ports();
-    ocaml::Pointer::alloc_custom(MidiInputOcaml { midi_input, ports })
-}
-
-#[ocaml::func]
-pub fn enumerate_midi_ports(midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>) -> Vec<String> {
-    let midi_input = &midi_input_ocaml.as_ref().midi_input;
-    midi_input_ocaml
-        .as_ref()
-        .ports
+    let port_names = midi_input
+        .ports()
         .iter()
         .map(|port| {
             midi_input
                 .port_name(port)
                 .expect("failed to get name of midi port")
         })
-        .collect()
+        .collect();
+    ocaml::Pointer::alloc_custom(MidiInputOcaml {
+        midi_input: Some(midi_input),
+        ports,
+        port_names,
+        connection: None,
+        receiver: None,
+    })
+}
+
+#[ocaml::func]
+pub fn midi_port_names(midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>) -> Vec<String> {
+    midi_input_ocaml.as_ref().port_names.clone()
+}
+
+#[ocaml::func]
+pub fn get_num_midi_ports(midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>) -> i32 {
+    midi_input_ocaml.as_ref().ports.len() as i32
+}
+
+#[ocaml::func]
+pub fn is_midi_input_available(midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>) -> bool {
+    midi_input_ocaml.as_ref().midi_input.is_some()
+}
+
+fn with_variable_length_encoding_bytes<F: FnMut(u8)>(x: u64, mut f: F) {
+    let x = x.min(0x0FFF_FFFF);
+    const MASK_LOW_7_BITS: u64 = 0b0111_1111;
+    const TOP_BIT: u8 = 0b1000_0000;
+    let x3 = ((x >> 21) & MASK_LOW_7_BITS) as u8;
+    let x2 = ((x >> 14) & MASK_LOW_7_BITS) as u8;
+    let x1 = ((x >> 7) & MASK_LOW_7_BITS) as u8;
+    let x0 = (x & MASK_LOW_7_BITS) as u8;
+    if x3 != 0 {
+        f(x3 | TOP_BIT);
+        f(x2 | TOP_BIT);
+        f(x1 | TOP_BIT);
+    } else if x2 != 0 {
+        f(x2 | TOP_BIT);
+        f(x1 | TOP_BIT);
+    } else if x1 != 0 {
+        f(x1 | TOP_BIT);
+    }
+    f(x0);
+}
+
+#[ocaml::func]
+pub fn midi_port_connect(mut midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>, port_index: i32) {
+    let midi_input_ocaml = midi_input_ocaml.as_mut();
+    let (sender, receiver) = mpsc::channel::<Vec<u8>>();
+    let mut previous_timestamp_us = None;
+    let connection = midi_input_ocaml
+        .midi_input
+        .take()
+        .expect("Midi input has already been used to connect to a port")
+        .connect(
+            &midi_input_ocaml.ports[port_index as usize],
+            "llama-midi-input",
+            move |timestamp_us, message, _| {
+                let time_delta_us = match previous_timestamp_us {
+                    None => 0,
+                    Some(previous_timestamp_us) => timestamp_us - previous_timestamp_us,
+                };
+                previous_timestamp_us = Some(timestamp_us);
+                let time_delta_ms = time_delta_us / 1000;
+                let mut data = Vec::new();
+                with_variable_length_encoding_bytes(time_delta_ms, |x| {
+                    data.push(x);
+                });
+                for &x in message {
+                    data.push(x);
+                }
+                if let Err(_) = sender.send(data) {
+                    log::error!("failed to send message from midi thread");
+                }
+            },
+            (),
+        )
+        .expect("failed to connect to midi port");
+    midi_input_ocaml.connection = Some(connection);
+    midi_input_ocaml.receiver = Some(receiver);
+}
+
+#[ocaml::func]
+pub fn midi_port_drain_messages(midi_input_ocaml: ocaml::Pointer<MidiInputOcaml>) -> Vec<i32> {
+    let mut out = Vec::new();
+    if let Some(receiver) = midi_input_ocaml.as_ref().receiver.as_ref() {
+        while let Ok(data_bytes) = receiver.try_recv() {
+            for byte in data_bytes {
+                out.push(byte as i32);
+            }
+        }
+    }
+    out
 }

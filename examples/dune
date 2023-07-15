@@ -53,7 +53,7 @@
  (libraries llama_interactive llama llama_core.midi))
 
 (executable
- (public_name list_midi_ports)
- (modules list_midi_ports)
- (package llama)
- (libraries llama))
+ (public_name midi_interactive)
+ (modules midi_interactive)
+ (package llama_interactive)
+ (libraries llama_interactive llama_core.midi))

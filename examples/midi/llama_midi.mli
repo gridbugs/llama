@@ -51,6 +51,7 @@ module Event : sig
   type t = { delta_time : int; message : Message.t }
 
   val to_string : t -> string
+  val parse_multi_from_char_array : char array -> t list
 end
 
 module Track : sig

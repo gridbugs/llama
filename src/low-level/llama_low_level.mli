@@ -21,5 +21,7 @@ module Midi_input : sig
   type t
 
   val create : unit -> t
-  val enumerate_midi_ports : t -> string list
+  val midi_port_names : t -> string list
+  val midi_port_connect : t -> int -> unit
+  val midi_port_drain_messages_to_char_array : t -> char array
 end

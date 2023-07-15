@@ -344,7 +344,7 @@ module Event = struct
     let message_string = Message.to_string message in
     sprintf "((delta_time %d) (message %s))" delta_time message_string
 
-  let parse_result running_status =
+  let parse_running running_status =
     let open Byte_array_parser in
     let* delta_time = variable_length_quantity and+ next_byte = peek_byte in
     let* status =
@@ -358,6 +358,14 @@ module Event = struct
     in
     let+ message = Message.parse status in
     ({ delta_time; message }, `Status status)
+
+  let parse =
+    let open Byte_array_parser in
+    let+ t, _status = parse_running None in
+    t
+
+  let parse_multi_from_char_array =
+    Byte_array_parser.(run (repeat_until_end_exact parse))
 end
 
 module Track = struct
@@ -376,7 +384,7 @@ module Track = struct
              "Last event in track extends beyond the track boundary")
       else
         let* event, `Status running_status =
-          Event.parse_result running_status
+          Event.parse_running running_status
         in
         match event.message with
         | Meta_event End_of_track -> return (event :: acc)

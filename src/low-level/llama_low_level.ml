@@ -54,7 +54,32 @@ module Midi_input = struct
   type t
 
   external create : unit -> t = "create_midi_input"
-  external enumerate_midi_ports_raw : t -> string array = "enumerate_midi_ports"
+  external midi_port_names_raw : t -> string array = "midi_port_names"
+  external get_num_midi_ports_raw : t -> int32 = "get_num_midi_ports"
+  external is_midi_input_available_raw : t -> bool = "is_midi_input_available"
+  external midi_port_connect_raw : t -> int32 -> unit = "midi_port_connect"
 
-  let enumerate_midi_ports t = enumerate_midi_ports_raw t |> Array.to_list
+  external midi_port_drain_messages_raw : t -> int32 array
+    = "midi_port_drain_messages"
+
+  let midi_port_names t = midi_port_names_raw t |> Array.to_list
+  let get_num_midi_ports t = get_num_midi_ports_raw t |> Int32.to_int
+
+  let midi_port_connect t index =
+    let num_midi_ports = get_num_midi_ports t in
+    if index < num_midi_ports then
+      if is_midi_input_available_raw t then
+        midi_port_connect_raw t (Int32.of_int index)
+      else
+        failwith
+          "Midi input may only be used to connect to a single port (ever)"
+    else
+      failwith
+        (Printf.sprintf
+           "Midi port index %d is out of range (there are %d midi ports)" index
+           num_midi_ports)
+
+  let midi_port_drain_messages_to_char_array t =
+    midi_port_drain_messages_raw t
+    |> Array.map (fun i32 -> char_of_int (Int32.to_int i32))
 end

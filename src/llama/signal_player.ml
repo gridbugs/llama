@@ -11,7 +11,7 @@ type t = {
 }
 
 let create ?(downsample = 1) ?(initial_signal = Signal.silence) () =
-  let output_stream = Output_stream.create_with_downsample downsample in
+  let output_stream = Output_stream.create ~downsample () in
   {
     output_stream;
     sample_index = 0;

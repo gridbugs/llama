@@ -9,6 +9,26 @@ let live_midi_signal midi_input =
       in
       Llama_midi.Event.parse_multi_from_char_array raw_data)
 
+let pitch_wheel_to_pitch_multiplier =
+  let pitch_wheel_max = 8192.0 in
+  let max_ratio = Music.semitone_ratio *. Music.semitone_ratio in
+  fun pitch_wheel ->
+    let pitch_wheel_1 = Int.to_float pitch_wheel /. pitch_wheel_max in
+    Float.pow max_ratio pitch_wheel_1
+
+module Controller_table = struct
+  type t = float Signal.t array
+
+  let num_controllers = 128
+
+  let create () =
+    let refs = Array.init num_controllers ~f:(fun _ -> ref 0.0) in
+    let t = Array.map refs ~f:Signal.of_ref in
+    (t, refs)
+
+  let get t i = Array.get t i
+end
+
 module Sequencer = struct
   open Llama_midi
 
@@ -18,6 +38,12 @@ module Sequencer = struct
     velocity : int Signal.t;
   }
 
+  type output = {
+    per_voice : output_per_voice list;
+    pitch_wheel_multiplier : float Signal.t;
+    controller_table : Controller_table.t;
+  }
+
   type voice_state = { note : int; gate : bool; velocity : int }
 
   let signal num_voices (track_signal : Event.t list Signal.t) =
@@ -25,10 +51,19 @@ module Sequencer = struct
       Array.init num_voices
         ~f:(Fun.const { note = 0; gate = false; velocity = 0 })
     in
+    let find_free_voice_index () =
+      let rec loop i =
+        if i >= Array.length voices then None
+        else if not (Array.get voices i).gate then Some i
+        else loop (i + 1)
+      in
+      loop 0
+    in
     let currently_playing_voice_index_by_note =
       Array.init 128 ~f:(Fun.const None)
     in
-    let next_voice_index = ref 0 in
+    let controller_table, controller_refs = Controller_table.create () in
+    let pitch_wheel_multiplier = ref 1.0 in
     let signal_to_update_state =
       Signal.of_raw (fun ctx ->
           let voice_messages =
@@ -39,57 +74,109 @@ module Sequencer = struct
                        Some voice_message.message
                    | _ -> None)
           in
-          List.iter voice_messages ~f:(function
-            | Llama_midi.Channel_voice_message.Note_off { note; velocity } -> (
-                match Array.get currently_playing_voice_index_by_note note with
-                | None -> ()
-                | Some voice_index ->
-                    Array.set currently_playing_voice_index_by_note note None;
-                    let voice = Array.get voices voice_index in
-                    Array.set voices voice_index
-                      { voice with gate = false; velocity })
-            | Llama_midi.Channel_voice_message.Note_on { note; velocity } -> (
-                match Array.get currently_playing_voice_index_by_note note with
-                | Some _voice_already_assigned_to_note -> ()
-                | None ->
-                    let voice_index = !next_voice_index in
-                    next_voice_index := (voice_index + 1) mod num_voices;
-                    (* Store the mapping from note -> voice so that when the note
-                       is released we turn off the right voice. *)
-                    Array.set currently_playing_voice_index_by_note note
-                      (Some voice_index);
-                    let current_voice = Array.get voices voice_index in
-                    if current_voice.gate then
-                      (* Another note is still using that voice. Clear its
-                         mapping from note -> voice so when the note is
-                         released we don't turn off the voice. *)
-                      Array.set currently_playing_voice_index_by_note
-                        current_voice.note None;
-                    (* Store the mapping from voice to note so if another note takes this
-                       voice it can update the fact the the current note no longer holds
-                       it. *)
-                    Array.set voices voice_index { note; gate = true; velocity }
-                )
-            | _ -> ()))
+          List.iter voice_messages ~f:(fun message ->
+              match message with
+              | Llama_midi.Channel_voice_message.Note_off { note; velocity }
+                -> (
+                  match
+                    Array.get currently_playing_voice_index_by_note note
+                  with
+                  | None -> ()
+                  | Some voice_index ->
+                      Array.set currently_playing_voice_index_by_note note None;
+                      let voice = Array.get voices voice_index in
+                      Array.set voices voice_index
+                        { voice with gate = false; velocity })
+              | Note_on { note; velocity } -> (
+                  match
+                    Array.get currently_playing_voice_index_by_note note
+                  with
+                  | Some voice_index_already_assigned_to_note ->
+                      (* Update the velocity *)
+                      Array.set voices voice_index_already_assigned_to_note
+                        { note; gate = true; velocity }
+                  | None -> (
+                      match find_free_voice_index () with
+                      | None ->
+                          (* There are no free voices for the new note *) ()
+                      | Some voice_index ->
+                          (* Store the mapping from note -> voice so that when the note
+                             is released we turn off the right voice. *)
+                          Array.set currently_playing_voice_index_by_note note
+                            (Some voice_index);
+                          let current_voice = Array.get voices voice_index in
+                          if current_voice.gate then
+                            (* Another note is still using that voice. Clear its
+                               mapping from note -> voice so when the note is
+                               released we don't turn off the voice. *)
+                            Array.set currently_playing_voice_index_by_note
+                              current_voice.note None;
+                          (* Store the mapping from voice to note so if another note takes this
+                             voice it can update the fact the the current note no longer holds
+                             it. *)
+                          Array.set voices voice_index
+                            { note; gate = true; velocity }))
+              | Pitch_wheel_change { signed_value } ->
+                  pitch_wheel_multiplier :=
+                    pitch_wheel_to_pitch_multiplier signed_value
+              | Control_change { controller; value } ->
+                  let ref = Array.get controller_refs controller in
+                  ref := Int.to_float value /. 127.0
+              | _ -> ()))
     in
-    List.init ~len:num_voices ~f:(fun i ->
-        let frequency_hz =
-          Signal.map signal_to_update_state ~f:(fun () ->
-              let { note; _ } = Array.get voices i in
-              Music.frequency_hz_of_midi_index note)
-        in
-        let gate =
-          Signal.map signal_to_update_state ~f:(fun () ->
-              let { gate; _ } = Array.get voices i in
-              gate)
-        in
-        let velocity =
-          Signal.map signal_to_update_state ~f:(fun () ->
-              let { velocity; _ } = Array.get voices i in
-              velocity)
-        in
-        { frequency_hz; gate; velocity })
+    let per_voice =
+      List.init ~len:num_voices ~f:(fun i ->
+          let frequency_hz =
+            Signal.map signal_to_update_state ~f:(fun () ->
+                let { note; _ } = Array.get voices i in
+                Music.frequency_hz_of_midi_index note)
+          in
+          let gate =
+            Signal.map signal_to_update_state ~f:(fun () ->
+                let { gate; _ } = Array.get voices i in
+                gate)
+          in
+          let velocity =
+            Signal.map signal_to_update_state ~f:(fun () ->
+                let { velocity; _ } = Array.get voices i in
+                velocity)
+          in
+          { frequency_hz; gate; velocity })
+    in
+    let pitch_wheel_multiplier = Signal.of_ref pitch_wheel_multiplier in
+    { per_voice; pitch_wheel_multiplier; controller_table }
 end
+
+let make_voice _effect_clock pitch_wheel_multiplier waveform
+    { Sequencer.frequency_hz; gate; velocity } =
+  let velocity_01 =
+    map velocity ~f:(fun v -> Float.of_int v /. 127.0 |> Float.clamp_01)
+  in
+  let oscillator_frequency_hz = frequency_hz *.. pitch_wheel_multiplier in
+  let osc =
+    mean
+      [
+        oscillator ~square_wave_pulse_width_01:(const 0.1) waveform
+          oscillator_frequency_hz;
+      ]
+  in
+  let attack_s = const 0.01 +.. (const 0.1 *.. (const 1.0 -.. velocity_01)) in
+  let release_s = const 0.01 +.. (const 0.3 *.. (const 1.0 -.. velocity_01)) in
+  let filter_env =
+    velocity_01
+    *.. adsr_linear ~gate ~attack_s ~decay_s:(const 1.0) ~sustain_01:(const 0.5)
+          ~release_s
+    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+  in
+  let filtered_osc =
+    chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
+      ~cutoff_hz:(sum [ const 1000.0; filter_env |> scale 2000.0 ])
+  in
+  let amp_env =
+    asr_linear ~gate ~attack_s ~release_s
+    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+  in
+  lazy_amplifier filtered_osc ~volume:amp_env
 
 (* Removes any sharp changes from the mouse position which could cause bad
    sounds to come out of the filter controlled by the mouse *)
@@ -98,65 +185,32 @@ let mouse_filter =
 
 let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_input =
   let event_signal = live_midi_signal midi_input in
-  let sequencer_output = Sequencer.signal 12 event_signal in
+  let { Sequencer.per_voice; pitch_wheel_multiplier; controller_table } =
+    Sequencer.signal 12 event_signal
+  in
+  let preset =
+    Controller_table.get controller_table 1
+    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 20.0)
+  in
   let effect_clock = clock (const 8.0) in
+  let hold = Controller_table.get controller_table 64 in
   let voices =
-    List.map sequencer_output
-      ~f:(fun { Sequencer.frequency_hz; gate; velocity } ->
-        let velocity_01 =
-          const 1.0
-          (*          map velocity ~f:(fun v -> Float.of_int v /. 127.0 |> Float.clamp_01) *)
-        in
-        let sah_noise =
-          sample_and_hold (noise_01 ()) effect_clock
-          |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 100.0)
-        in
-        let lfo =
-          low_frequency_oscillator_01 (const Sine) (const 0.2) (trigger gate)
-        in
-
-        let oscillator_frequency_hz = frequency_hz |> scale 0.5 in
-        let osc =
-          mean
-            [
-              oscillator (const Saw) oscillator_frequency_hz;
-              oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw)
-                (oscillator_frequency_hz |> scale 2.0)
-              |> scale 0.5;
-              oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw)
-                (oscillator_frequency_hz |> scale 4.0)
-              |> scale 0.25;
-            ]
-        in
-        let release_s = const 0.3 in
-        let filter_env =
-          velocity_01
-          *.. adsr_linear ~gate ~attack_s:(const 0.1) ~decay_s:(const 1.0)
-                ~sustain_01:(const 0.2) ~release_s
-        in
-        let filtered_osc =
-          chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
-            ~cutoff_hz:
-              (sum
-                 [
-                   const 100.0;
-                   filter_env |> scale 2000.0;
-                   sah_noise |> scale 400.0;
-                   lfo |> scale 100.0;
-                 ])
-        in
-        filtered_osc
-        *.. (velocity_01 *.. asr_linear ~gate ~attack_s:(const 0.001) ~release_s))
+    List.map per_voice
+      ~f:(make_voice effect_clock pitch_wheel_multiplier (const Saw))
     |> sum
   in
   let mouse_x = mouse_filter input.mouse.mouse_x in
   let mouse_y = mouse_filter input.mouse.mouse_y in
-  let echo_effect signal = signal |> scale 0.6 in
   voices
   |> chebyshev_low_pass_filter
-       ~epsilon:(mouse_y |> exp_01 1.0 |> scale 10.0)
-       ~cutoff_hz:(mouse_x |> exp_01 4.0 |> scale 8000.0 |> offset 100.0)
-(*  |> map ~f:(fun x -> x *. 2.0 |> Float.clamp_sym ~mag:4.0) *)
+       ~epsilon:(mouse_y |> exp_01 4.0 |> scale 10.0)
+       ~cutoff_hz:
+         (const 1.0 -.. preset |> exp_01 4.0 |> scale 8000.0 |> offset 100.0)
+  |> both (both mouse_x hold)
+  |> map ~f:(fun ((mouse_x, hold), x) ->
+         if hold > 0.5 then
+           (1.0 +. (10.0 *. mouse_x)) *. x |> Float.clamp_sym ~mag:1.0
+         else x)
 (*
   |> echo ~f:echo_effect ~delay_s:(const 0.3)
   |> echo ~f:echo_effect ~delay_s:(const 0.5) *)

@@ -9,7 +9,7 @@ end
 module Output_stream : sig
   type t
 
-  val create_with_downsample : int -> t
+  val create : ?downsample:int -> unit -> t
   val sample_rate_hz : t -> int
   val num_channels : t -> int
   val set_buffer_padding : t -> int -> unit

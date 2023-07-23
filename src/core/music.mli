@@ -25,3 +25,4 @@ module Note : sig
 end
 
 val frequency_hz_of_midi_index : int -> float
+val semitone_ratio : float

@@ -16,6 +16,8 @@ module Channel_voice_message : sig
     | Pitch_wheel_change of pitch_wheel_change
 
   type t = { channel : int; message : message }
+
+  val message_to_string : message -> string
 end
 
 module System_message : sig

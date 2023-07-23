@@ -27,9 +27,6 @@ module Output_stream = struct
   external create_with_downsample_32 : int32 -> t
     = "create_output_stream_with_downsample"
 
-  let create_with_downsample downsample =
-    create_with_downsample_32 (Int32.of_int downsample)
-
   external sample_rate_hz_32 : t -> int32 = "sample_rate_hz"
 
   let sample_rate_hz t = sample_rate_hz_32 t |> Int32.to_int
@@ -42,6 +39,11 @@ module Output_stream = struct
 
   let set_buffer_padding t buffer_padding =
     set_buffer_padding_32 t (Int32.of_int buffer_padding)
+
+  let create ?(downsample = 1) () =
+    let stream = create_with_downsample_32 (Int32.of_int downsample) in
+    set_buffer_padding stream 2500;
+    stream
 
   external samples_behind_32 : t -> int32 = "samples_behind"
 

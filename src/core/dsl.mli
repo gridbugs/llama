@@ -31,6 +31,8 @@ val low_frequency_oscillator_01 :
   float t
 
 val clock : float t -> bool t
+(** A clock signal with a given frequency in Hz *)
+
 val clock_of_period_s : float t -> bool t
 val clock_divide : int -> bool t -> bool t
 val asr_linear : gate:bool t -> attack_s:float t -> release_s:float t -> float t

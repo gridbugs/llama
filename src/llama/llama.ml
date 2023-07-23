@@ -19,3 +19,26 @@ let play_signal ?(downsample = 1) ?(scale_output_volume = 1.0) signal =
   Lwt_main.run (play_signal_lwt ~downsample ~scale_output_volume signal)
 
 module Signal_player = Signal_player
+
+module Midi = struct
+  include Midi
+
+  module Midi_input = struct
+    type t = Llama_low_level.Midi_input.t
+
+    let create = Llama_low_level.Midi_input.create
+    let port_names = Llama_low_level.Midi_input.port_names
+  end
+
+  let live_midi_signal input port =
+    Llama_low_level.Midi_input.port_connect input port;
+    Signal.of_raw (fun _ ->
+        let raw_data =
+          Llama_low_level.Midi_input.port_drain_messages_to_char_array input
+        in
+        Midi.Event.parse_multi_from_char_array raw_data)
+
+  let live_midi_sequencer input ~port ~polyphony =
+    let event_signal = live_midi_signal input port in
+    Midi_sequencer.signal polyphony event_signal
+end

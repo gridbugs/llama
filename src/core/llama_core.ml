@@ -4,4 +4,4 @@ module Float = Float
 module Music = Music
 module List = List
 module Array = Array
-module Midi = Llama_midi
+module Midi = Midi

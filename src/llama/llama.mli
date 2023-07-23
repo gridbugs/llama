@@ -29,4 +29,24 @@ module Float = Float
 module Music = Music
 module List = List
 module Array = Array
-module Midi = Midi
+
+module Midi : sig
+  include module type of struct
+    include Midi
+  end
+
+  module Midi_input : sig
+    type t
+    (** Represents a midi input device *)
+
+    val create : unit -> t
+    val port_names : t -> string list
+  end
+
+  val live_midi_signal : Midi_input.t -> int -> Event.t list Signal.t
+  (** Create a signal of lists of midi events that arrive on a given midi port in real time *)
+
+  val live_midi_sequencer :
+    Midi_input.t -> port:int -> polyphony:int -> Midi_sequencer.output
+  (** Create a midi sequencer that processes midi events from a given port *)
+end

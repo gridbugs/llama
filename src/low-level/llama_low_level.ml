@@ -64,10 +64,10 @@ module Midi_input = struct
   external midi_port_drain_messages_raw : t -> int32 array
     = "midi_port_drain_messages"
 
-  let midi_port_names t = midi_port_names_raw t |> Array.to_list
+  let port_names t = midi_port_names_raw t |> Array.to_list
   let get_num_midi_ports t = get_num_midi_ports_raw t |> Int32.to_int
 
-  let midi_port_connect t index =
+  let port_connect t index =
     let num_midi_ports = get_num_midi_ports t in
     if index < num_midi_ports then
       if is_midi_input_available_raw t then
@@ -81,7 +81,7 @@ module Midi_input = struct
            "Midi port index %d is out of range (there are %d midi ports)" index
            num_midi_ports)
 
-  let midi_port_drain_messages_to_char_array t =
+  let port_drain_messages_to_char_array t =
     midi_port_drain_messages_raw t
     |> Array.map (fun i32 -> char_of_int (Int32.to_int i32))
 end

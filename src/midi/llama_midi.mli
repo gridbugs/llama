@@ -18,6 +18,7 @@ module Channel_voice_message : sig
   type t = { channel : int; message : message }
 
   val message_to_string : message -> string
+  val to_string : t -> string
 end
 
 module System_message : sig
@@ -35,11 +36,15 @@ module System_message : sig
     | Active_sensing
     | Reset
     | Undefined of int
+
+  val to_string : t -> string
 end
 
 module Meta_event : sig
   type other = { type_index : int; contents : char array }
   type t = End_of_track | Other of other
+
+  val to_string : t -> string
 end
 
 module Message : sig
@@ -47,6 +52,8 @@ module Message : sig
     | Channel_voice_message of Channel_voice_message.t
     | System_message of System_message.t
     | Meta_event of Meta_event.t
+
+  val to_string : t -> string
 end
 
 module Event : sig
@@ -58,6 +65,8 @@ end
 
 module Track : sig
   type t = Event.t list
+
+  val to_string : t -> string
 end
 
 module Format : sig
@@ -65,11 +74,15 @@ module Format : sig
     | Single_track
     | Simultaneous_tracks of int
     | Sequential_tracks of int
+
+  val to_string : t -> string
 end
 
 module Division : sig
   type time_code = { smpte_format : int; ticks_per_frame : int }
   type t = Ticks_per_quarter_note of int | Time_code of time_code
+
+  val to_string : t -> string
 end
 
 module Header : sig

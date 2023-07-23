@@ -1,3 +1,0 @@
-(library
- (name llama_midi)
- (public_name llama_core.midi))

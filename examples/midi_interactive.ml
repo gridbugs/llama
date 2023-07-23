@@ -7,7 +7,7 @@ let live_midi_signal midi_input =
         Llama_low_level.Midi_input.midi_port_drain_messages_to_char_array
           midi_input
       in
-      Llama_midi.Event.parse_multi_from_char_array raw_data)
+      Llama.Midi.Event.parse_multi_from_char_array raw_data)
 
 let pitch_wheel_to_pitch_multiplier =
   let pitch_wheel_max = 8192.0 in

@@ -50,10 +50,10 @@
  (public_name midi_player)
  (modules midi_player)
  (package llama_interactive)
- (libraries llama_interactive llama llama_core.midi))
+ (libraries llama_interactive llama))
 
 (executable
  (public_name midi_interactive)
  (modules midi_interactive)
  (package llama_interactive)
- (libraries llama_interactive llama_core.midi))
+ (libraries llama_interactive))

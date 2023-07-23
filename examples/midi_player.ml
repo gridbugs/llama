@@ -1,5 +1,5 @@
 open Llama_interactive
-open Llama_midi
+open Llama.Midi
 open Dsl
 
 let track_signal (track : Track.t) clock =
@@ -51,19 +51,19 @@ module Sequencer = struct
             Signal.sample track_signal ctx
             |> List.filter_map ~f:(fun (event : Event.t) ->
                    match event.message with
-                   | Message.Channel_voice_message voice_message ->
+                   | Llama.Midi.Message.Channel_voice_message voice_message ->
                        Some voice_message.message
                    | _ -> None)
           in
           List.iter voice_messages ~f:(function
-            | Llama_midi.Channel_voice_message.Note_off { note; _ } -> (
+            | Llama.Midi.Channel_voice_message.Note_off { note; _ } -> (
                 match Array.get currently_playing_voice_index_by_note note with
                 | None -> ()
                 | Some voice_index ->
                     Array.set currently_playing_voice_index_by_note note None;
                     let voice = Array.get voices voice_index in
                     Array.set voices voice_index { voice with gate = false })
-            | Llama_midi.Channel_voice_message.Note_on { note; _ } -> (
+            | Note_on { note; _ } -> (
                 match Array.get currently_playing_voice_index_by_note note with
                 | Some _voice_already_assigned_to_note -> ()
                 | None ->

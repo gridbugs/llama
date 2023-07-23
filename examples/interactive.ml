@@ -29,7 +29,7 @@ let mk_voice gate freq_hz effect_clock =
            ])
   in
   let amp_env =
-    asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0
+    ar_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0
   in
   lazy_amplifier filtered_osc ~volume:amp_env
   |> map ~f:(fun x -> Float.clamp_sym ~mag:2.0 (x *. 10.0))

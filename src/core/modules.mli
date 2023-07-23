@@ -26,7 +26,7 @@ module Clock_divider : sig
   val signal : t -> bool Signal.t
 end
 
-module Asr_linear : sig
+module Ar_linear : sig
   type t = {
     gate : bool Signal.t;
     attack_s : float Signal.t;

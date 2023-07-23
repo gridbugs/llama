@@ -132,7 +132,7 @@ let midi_signal (data : Llama_midi.Data.t) =
         in
         filtered_osc
         |> lazy_amplifier
-             ~volume:(asr_linear ~gate ~attack_s:(const 0.001) ~release_s))
+             ~volume:(ar_linear ~gate ~attack_s:(const 0.001) ~release_s))
     |> sum
   in
   voices

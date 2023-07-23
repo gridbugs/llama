@@ -35,7 +35,11 @@ val clock : float t -> bool t
 
 val clock_of_period_s : float t -> bool t
 val clock_divide : int -> bool t -> bool t
-val asr_linear : gate:bool t -> attack_s:float t -> release_s:float t -> float t
+
+val ar_linear : gate:bool t -> attack_s:float t -> release_s:float t -> float t
+(** Envelope generator with an attack and release parameter. This returns a
+    signal which rises linearly to 1 when gate is true, and drops linearly to 0
+    when gate is false *)
 
 val adsr_linear :
   gate:bool t ->

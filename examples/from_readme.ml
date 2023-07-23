@@ -26,7 +26,7 @@ let note_clock : bool Signal.t =
    is typically used to modulate a signal in response to a key press, which we
    are simulating here with [note_clock]. *)
 let envelope : float Signal.t =
-  asr_linear ~gate:note_clock ~attack_s:(const 0.01) ~release_s:(const 0.2)
+  ar_linear ~gate:note_clock ~attack_s:(const 0.01) ~release_s:(const 0.2)
 
 (* Multiply the oscillator with the envelope to produce a repeating
    burst of volume which gradually tapers off twice per second. *)

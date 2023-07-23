@@ -173,7 +173,7 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
       ~cutoff_hz:(sum [ const 1000.0; filter_env |> scale 2000.0 ])
   in
   let amp_env =
-    asr_linear ~gate ~attack_s ~release_s
+    ar_linear ~gate ~attack_s ~release_s
     |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
   in
   lazy_amplifier filtered_osc ~volume:amp_env

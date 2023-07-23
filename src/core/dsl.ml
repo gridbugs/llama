@@ -46,8 +46,8 @@ let clock_of_period_s period_s = clock (recip period_s)
 let clock_divide denominator clock =
   Clock_divider.(signal { clock; denominator })
 
-let asr_linear ~gate ~attack_s ~release_s =
-  Asr_linear.(signal { gate; attack_s; release_s })
+let ar_linear ~gate ~attack_s ~release_s =
+  Ar_linear.(signal { gate; attack_s; release_s })
 
 let adsr_linear ~gate ~attack_s ~decay_s ~sustain_01 ~release_s =
   Adsr_linear.(signal { gate; attack_s; decay_s; sustain_01; release_s })

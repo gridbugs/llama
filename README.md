@@ -85,7 +85,7 @@ let note_clock : bool Signal.t =
    is typically used to modulate a signal in response to a key press, which we
    are simulating here with [note_clock]. *)
 let envelope : float Signal.t =
-  asr_linear ~gate:note_clock ~attack_s:(const 0.01) ~release_s:(const 0.2)
+  ar_linear ~gate:note_clock ~attack_s:(const 0.01) ~release_s:(const 0.2)
 
 (* Multiply the oscillator with the envelope to produce a repeating
    burst of volume which gradually tapers off twice per second. *)
@@ -115,7 +115,7 @@ let { value = freq; gate } = sustained_step_sequencer steps (clock (const 4.0));
 let osc = oscillator (const Saw) freq;;
 
 (* Create an envelope generator to shape the volume according to the gate. *)
-let env = asr_linear ~gate ~attack_s:(const 0.01) ~release_s:(const 0.2);;
+let env = ar_linear ~gate ~attack_s:(const 0.01) ~release_s:(const 0.2);;
 
 (* Use the envelope to control the volume of the oscillator. *)
 let amp = osc *.. env

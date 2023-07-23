@@ -120,7 +120,7 @@ let play_events events =
             ~half_power_frequency_hz:(filter_env |> scale 4000.0 |> offset 200.0)
           |> butterworth_high_pass_filter ~half_power_frequency_hz:(const 500.0)
         in
-        filtered_osc *.. asr_linear ~gate ~attack_s:(const 0.05) ~release_s
+        filtered_osc *.. ar_linear ~gate ~attack_s:(const 0.05) ~release_s
         |> map ~f:(fun x -> x))
     |> sum
   in

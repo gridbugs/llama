@@ -101,7 +101,7 @@ module Clock_divider = struct
     |> Signal.of_raw
 end
 
-module Asr_linear = struct
+module Ar_linear = struct
   type t = {
     gate : bool Signal.t;
     attack_s : float Signal.t;
@@ -392,8 +392,8 @@ module Delay = struct
         t.fill)
       else (
         (if Int.equal current_size target_size || Queue.is_empty queue then
-         let sample = Signal.sample t.signal ctx in
-         Queue.add sample queue);
+           let sample = Signal.sample t.signal ctx in
+           Queue.add sample queue);
         Queue.take queue)
 
   let signal t = Signal.of_raw (raw t)

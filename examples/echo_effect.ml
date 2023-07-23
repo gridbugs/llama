@@ -28,7 +28,7 @@ let () =
       ]
   in
   let envelope =
-    asr_linear ~gate ~attack_s:(const 0.01) ~release_s:(const 0.1)
+    ar_linear ~gate ~attack_s:(const 0.01) ~release_s:(const 0.1)
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~epsilon:(const 1.0)

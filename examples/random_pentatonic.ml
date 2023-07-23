@@ -50,7 +50,7 @@ let pentatonic_overdrive ~sequencer_clock ~effect_clock =
         +.. (sah_noise |> scale 1000.0))
     |> chebyshev_high_pass_filter ~epsilon:(const 4.0) ~cutoff_hz:(const 100.0)
   in
-  filtered_osc *.. asr_linear ~gate ~attack_s:(const 0.01) ~release_s
+  filtered_osc *.. ar_linear ~gate ~attack_s:(const 0.01) ~release_s
   |> map ~f:(fun x -> Float.clamp_1 (x *. 3.0))
 
 let drum_machine ~cymbal:cymbal_p ~snare:snare_p ~bass:bass_p clock =
@@ -102,7 +102,7 @@ let pentatonic_strings ~sequencer_clock =
       ~cutoff_hz:(filter_env |> scale 4000.0 |> offset 0.0)
   in
   filtered_osc
-  *.. (asr_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0)
+  *.. (ar_linear ~gate ~attack_s:(const 0.01) ~release_s |> exp_01 1.0)
   |> map ~f:(fun x -> Float.clamp_1 (x *. 1.0))
 
 let play_possibly_with_drums wav_players which =

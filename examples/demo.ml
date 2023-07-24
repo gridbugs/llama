@@ -1,7 +1,7 @@
 open Llama_interactive
 open Dsl
 
-let pretend_key = pulse ~frequency_hz:(const 2.0) ~duty_01:(const 0.1)
+let _pretend_key = pulse ~frequency_hz:(const 2.0) ~duty_01:(const 0.1)
 
 let mk_voice frequency gate =
   let envelope =

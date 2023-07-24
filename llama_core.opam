@@ -11,6 +11,7 @@ bug-reports: "https://github.com/gridbugs/llama/issues"
 depends: [
   "dune" {>= "3.0"}
   "ocaml" {>= "4.13"}
+  "llama_midi" {= version}
   "odoc" {with-doc}
 ]
 build: [

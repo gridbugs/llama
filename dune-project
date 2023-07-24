@@ -9,17 +9,18 @@
 (maintainers "https://github.com/gridbugs/llama/issues")
 
 (package
- (name llama_core)
- (synopsis "Core types and operations for the Llama synthesizer library")
- (description "Core types and operations for Llama. This is separate from the llama package so that other packages can be written which define new synthesizer modules based on llama without needing to depend on additional packages required by llama to interact with the sound card.")
- (depends
-  (ocaml (>= "4.13"))))
-
-(package
  (name llama_midi)
  (synopsis "Minimal library for parsing and representing midi data")
  (depends
   (ocaml (>= "4.13"))))
+
+(package
+ (name llama_core)
+ (synopsis "Core types and operations for the Llama synthesizer library")
+ (description "Core types and operations for Llama. This is separate from the llama package so that other packages can be written which define new synthesizer modules based on llama without needing to depend on additional packages required by llama to interact with the sound card.")
+ (depends
+  (ocaml (>= "4.13"))
+  (llama_midi (= :version))))
 
 (package
  (name llama)

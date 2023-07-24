@@ -35,7 +35,7 @@ module Midi_sequencer = struct
 
   type voice_state = { note : int; gate : bool; velocity : int }
 
-  let signal polyphony (track_signal : Event.t list Signal.t) =
+  let signal ~channel ~polyphony (track_signal : Event.t list Signal.t) =
     let voices =
       Array.init polyphony
         ~f:(Fun.const { note = 0; gate = false; velocity = 0 })
@@ -60,7 +60,9 @@ module Midi_sequencer = struct
             |> List.filter_map ~f:(fun (event : Event.t) ->
                    match event.message with
                    | Message.Channel_voice_message voice_message ->
-                       Some voice_message.message
+                       if voice_message.channel == channel then
+                         Some voice_message.message
+                       else None
                    | _ -> None)
           in
           List.iter voice_messages ~f:(fun message ->

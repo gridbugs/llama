@@ -21,7 +21,7 @@ module Midi_sequencer : sig
     controller_table : Controller_table.t;
   }
 
-  val signal : int -> Event.t list Signal.t -> output
+  val signal : channel:int -> polyphony:int -> Event.t list Signal.t -> output
 end
 
 val track_signal : Track.t -> bool Signal.t -> Event.t list Signal.t

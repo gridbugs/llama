@@ -47,6 +47,10 @@ module Midi : sig
   (** Create a signal of lists of midi events that arrive on a given midi port in real time *)
 
   val live_midi_sequencer :
-    Midi_input.t -> port:int -> polyphony:int -> Midi_sequencer.output
-  (** Create a midi sequencer that processes midi events from a given port *)
+    Midi_input.t ->
+    port:int ->
+    channel:int ->
+    polyphony:int ->
+    Midi_sequencer.output
+  (** Create a midi sequencer that processes midi events on a single midi channel from a given port *)
 end

@@ -38,7 +38,7 @@ module Midi = struct
         in
         Midi.Event.parse_multi_from_char_array raw_data)
 
-  let live_midi_sequencer input ~port ~polyphony =
+  let live_midi_sequencer input ~port ~channel ~polyphony =
     let event_signal = live_midi_signal input port in
-    Midi_sequencer.signal polyphony event_signal
+    Midi_sequencer.signal ~channel ~polyphony event_signal
 end

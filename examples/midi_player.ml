@@ -6,7 +6,9 @@ let midi_signal (data : Llama_midi.Data.t) =
   let clock = clock (const 1000.0) in
   let track = List.hd data.tracks in
   let midi_event_signal = track_signal track clock in
-  let sequencer_output = Midi_sequencer.signal 40 midi_event_signal in
+  let sequencer_output =
+    Midi_sequencer.signal ~channel:0 ~polyphony:64 midi_event_signal
+  in
   let voices =
     List.map sequencer_output.voices
       ~f:(fun { Midi_sequencer.frequency_hz; gate; velocity = _ } ->
@@ -81,8 +83,8 @@ module Args = struct
 end
 
 let () =
+  let { Args.midi_file_path } = Args.parse () in
   with_window ~background_rgba_01:(0.0, 0.0, 0.2, 1.0) (fun window ->
-      let { Args.midi_file_path } = Args.parse () in
       let reader = Llama_midi.File_reader.of_path midi_file_path in
       let data = Llama_midi.File_reader.read reader in
       let signal =

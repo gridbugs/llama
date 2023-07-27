@@ -24,6 +24,7 @@ val silence : float t
 val never : bool t
 val trigger : ?init:bool -> bool t -> bool t
 val scale : float -> float t -> float t
+val scale_div : float -> float t -> float t
 val offset : float -> float t -> float t
 
 val exp_01 : float -> float t -> float t

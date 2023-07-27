@@ -26,5 +26,5 @@ end
 
 val frequency_hz_of_midi_index : int -> float
 
-val semitone_ratio : float
+val semitone_ratio : float -> float
 (** The ratio between two successive notes separated by a semitone *)

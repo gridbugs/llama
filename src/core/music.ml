@@ -67,7 +67,7 @@ let frequency_hz_of_midi_index index =
   *. Float.pow 2.0
        (Int.to_float (index - a4_index) /. Int.to_float notes_per_octave)
 
-let semitone_ratio = Float.pow 2.0 (1.0 /. Int.to_float notes_per_octave)
+let semitone_ratio n = Float.pow 2.0 (n /. Int.to_float notes_per_octave)
 
 module Note = struct
   type t = Note_name.t * int

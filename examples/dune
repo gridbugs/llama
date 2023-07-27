@@ -59,6 +59,12 @@
  (libraries llama_interactive))
 
 (executable
+ (public_name sandstorm)
+ (modules sandstorm)
+ (package llama_interactive)
+ (libraries llama_interactive))
+
+(executable
  (public_name demo)
  (modules demo)
  (package llama_interactive)

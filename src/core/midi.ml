@@ -15,7 +15,7 @@ end
 
 let pitch_wheel_to_pitch_multiplier =
   let pitch_wheel_max = 8192.0 in
-  let max_ratio = Music.semitone_ratio *. Music.semitone_ratio in
+  let max_ratio = Music.semitone_ratio 2.0 in
   fun pitch_wheel ->
     let pitch_wheel_1 = Int.to_float pitch_wheel /. pitch_wheel_max in
     Float.pow max_ratio pitch_wheel_1

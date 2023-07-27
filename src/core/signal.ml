@@ -76,6 +76,7 @@ let trigger ?(init = false) t =
        trigger_sample)
 
 let scale s = map ~f:(fun x -> x *. s)
+let scale_div s = map ~f:(fun x -> x /. s)
 let offset s = map ~f:(fun x -> x +. s)
 
 let exp_01 k =

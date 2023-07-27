@@ -62,7 +62,7 @@ let signal input = signal_midi +.. signal_sdl input
 let () =
   with_window (fun window ->
       let viz'd_signal =
-        visualize ~stride:2 ~stable:true window
+        visualize ~stride:2 ~stable:true ~pixel_scale:2 window
           (signal (Window.input_signals window))
       in
       play_signal ~scale_output_volume:0.1 viz'd_signal)

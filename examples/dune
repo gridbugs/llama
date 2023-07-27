@@ -1,3 +1,9 @@
+(library
+ (name keyboard_helper)
+ (modules keyboard_helper)
+ (libraries llama_interactive)
+ (package llama_interactive))
+
 (executable
  (public_name sine_wave_440hz)
  (modules sine_wave_440hz)
@@ -44,7 +50,7 @@
  (public_name interactive)
  (modules interactive)
  (package llama_interactive)
- (libraries llama_interactive))
+ (libraries llama_interactive keyboard_helper))
 
 (executable
  (public_name midi_player)
@@ -62,7 +68,7 @@
  (public_name sandstorm)
  (modules sandstorm)
  (package llama_interactive)
- (libraries llama_interactive))
+ (libraries llama_interactive keyboard_helper))
 
 (executable
  (public_name demo)

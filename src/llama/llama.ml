@@ -31,14 +31,18 @@ module Midi = struct
   end
 
   let live_midi_signal input port =
-    Llama_low_level.Midi_input.port_connect input port;
-    Signal.of_raw (fun _ ->
-        let raw_data =
-          Llama_low_level.Midi_input.port_drain_messages_to_char_array input
-        in
-        Midi.Event.parse_multi_from_char_array raw_data)
+    if port < Llama_low_level.Midi_input.get_num_ports input then (
+      Llama_low_level.Midi_input.port_connect input port;
+      Ok
+        (Signal.of_raw (fun _ ->
+             let raw_data =
+               Llama_low_level.Midi_input.port_drain_messages_to_char_array
+                 input
+             in
+             Midi.Event.parse_multi_from_char_array raw_data)))
+    else Error `No_such_port
 
   let live_midi_sequencer input ~port ~channel ~polyphony =
-    let event_signal = live_midi_signal input port in
-    Midi_sequencer.signal ~channel ~polyphony event_signal
+    live_midi_signal input port
+    |> Result.map (Midi_sequencer.signal ~channel ~polyphony)
 end

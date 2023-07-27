@@ -1,8 +1,6 @@
 open Llama_interactive
 open Dsl
 
-let _pretend_key = pulse ~frequency_hz:(const 2.0) ~duty_01:(const 0.1)
-
 let mk_voice frequency gate ~preset =
   let saw_freq = frequency |> scale (Music.semitone_ratio (-19.0)) in
   let square_freq = frequency |> scale 2.0 in
@@ -20,22 +18,51 @@ let mk_voice frequency gate ~preset =
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~epsilon:(const 0.1)
-      ~cutoff_hz:(sum [ const 1000.0; filter_env |> scale 8000.0 ])
+      ~cutoff_hz:(sum [ const 1000.0; filter_env |> scale 4000.0 ])
   in
-  amp_env *.. filtered_osc
+  lazy_amplifier ~volume:amp_env filtered_osc
 
-let signal =
-  let { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table } =
+let signal_midi =
+  let port = 1 in
+  match
     Midi.Midi_input.create ()
-    |> Midi.live_midi_sequencer ~port:1 ~channel:0 ~polyphony:12
+    |> Midi.live_midi_sequencer ~port ~channel:0 ~polyphony:12
+  with
+  | Ok { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table }
+    ->
+      let preset = Midi.Controller_table.get controller_table 1 in
+      List.map voices
+        ~f:(fun { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } ->
+          mk_voice (frequency_hz *.. pitch_wheel_multiplier) gate ~preset)
+      |> sum
+  | Error `No_such_port ->
+      Printf.eprintf "No such midi port: %d\n" port;
+      silence
+
+let signal_sdl (input : (_, _) Input.t) =
+  let mouse_x =
+    input.mouse.mouse_x
+    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
   in
-  let preset = Midi.Controller_table.get controller_table 1 in
-  List.map voices
-    ~f:(fun { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } ->
-      mk_voice (frequency_hz *.. pitch_wheel_multiplier) gate ~preset)
+  let mouse_y =
+    input.mouse.mouse_y
+    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+  in
+  let preset = mouse_x in
+  Keyboard_helper.voices ~keys:input.keyboard ~mid_note:(`C, 3)
+  |> List.map ~f:(fun { Keyboard_helper.Voice.frequency_hz; gate } ->
+         mk_voice (const frequency_hz) gate ~preset)
   |> sum
+  |> chebyshev_low_pass_filter ~epsilon:(const 2.0)
+       ~cutoff_hz:(sum [ const 500.0; mouse_y |> scale 8000.0 ])
+(*|> map ~f:(fun x -> x *. 2.0 |> Float.clamp_sym ~mag:1.0) *)
+
+let signal input = signal_midi +.. signal_sdl input
 
 let () =
   with_window (fun window ->
-      let viz'd_signal = visualize ~stride:2 ~stable:true window signal in
+      let viz'd_signal =
+        visualize ~stride:2 ~stable:true window
+          (signal (Window.input_signals window))
+      in
       play_signal ~scale_output_volume:0.1 viz'd_signal)

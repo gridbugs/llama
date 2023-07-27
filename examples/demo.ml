@@ -13,6 +13,7 @@ let signal =
   let { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table } =
     Midi.Midi_input.create ()
     |> Midi.live_midi_sequencer ~port:1 ~channel:0 ~polyphony:12
+    |> Result.get_ok
   in
   let preset = Midi.Controller_table.get controller_table 1 in
   List.map voices

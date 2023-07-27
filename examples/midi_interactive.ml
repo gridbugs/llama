@@ -98,6 +98,7 @@ let () =
     let midi_sequencer =
       Llama.Midi.live_midi_sequencer midi_input ~port:midi_port ~channel:0
         ~polyphony:12
+      |> Result.get_ok
     in
     with_window ~background_rgba_01:(0.0, 0.0, 0.2, 1.0) (fun window ->
         let signal = signal (Window.input_signals window) midi_sequencer in

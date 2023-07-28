@@ -1,5 +1,6 @@
 ## 0.0.2 (unreleased)
 
+- Introduce `Signal.Gate.t` and `Signal.Trigger.t` wrappers of `bool Signal.t`
 - Rename `clock` constructor to `clock_of_frequency_hz`
 - Use `floatarray` instead of `float array`
 - Add `saturation` operator

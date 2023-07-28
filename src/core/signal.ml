@@ -93,6 +93,9 @@ let debug t ~f =
       f x;
       x)
 
+let debug_print_float_endline =
+  debug ~f:(fun x -> print_endline (Printf.sprintf "%f" x))
+
 let sum ts =
   of_raw (fun ctx ->
       List.fold_left ts ~init:0.0 ~f:(fun acc signal ->

@@ -35,6 +35,7 @@ val exp_01 : float -> float t -> float t
    k = 0 is special cased as a linear function for convenience. *)
 
 val debug : 'a t -> f:('a -> unit) -> 'a t
+val debug_print_float_endline : float t -> float t
 
 val to_01 : float t -> float t
 (** Takes a signal assumed to be in the range -1..1 and shifts and scales it to be in the range 0..1 *)

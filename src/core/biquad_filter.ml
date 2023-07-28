@@ -39,8 +39,8 @@ end
 module Butterworth = struct
   type t = { signal : float Signal.t; cutoff_hz : float Signal.t }
 
-  let update_buffer_low_pass buffer ~half_power_frequency_sample_rate_ratio =
-    let a = Float.tan (Float.pi *. half_power_frequency_sample_rate_ratio) in
+  let update_buffer_low_pass buffer ~cutoff_frequency_sample_rate_ratio =
+    let a = Float.tan (Float.pi *. cutoff_frequency_sample_rate_ratio) in
     let a2 = a *. a in
     let n = Int.to_float (Array.length buffer) in
     Array.iteri buffer ~f:(fun i entry ->
@@ -52,8 +52,8 @@ module Butterworth = struct
         entry.d1 <- 2.0 *. (1.0 -. a2) /. s;
         entry.d2 <- -.(a2 -. (2.0 *. a *. r) +. 1.0) /. s)
 
-  let update_buffer_high_pass buffer ~half_power_frequency_sample_rate_ratio =
-    let a = Float.tan (Float.pi *. half_power_frequency_sample_rate_ratio) in
+  let update_buffer_high_pass buffer ~cutoff_frequency_sample_rate_ratio =
+    let a = Float.tan (Float.pi *. cutoff_frequency_sample_rate_ratio) in
     let a2 = a *. a in
     let n = Int.to_float (Array.length buffer) in
     Array.iteri buffer ~f:(fun i entry ->
@@ -74,10 +74,10 @@ module Butterworth = struct
       fun ctx ->
         let sample = Signal.sample t.signal ctx in
         let cutoff_hz = Signal.sample t.cutoff_hz ctx in
-        let half_power_frequency_sample_rate_ratio =
+        let cutoff_frequency_sample_rate_ratio =
           cutoff_hz /. ctx.sample_rate_hz |> Float.max 0.0
         in
-        update_buffer buffer ~half_power_frequency_sample_rate_ratio;
+        update_buffer buffer ~cutoff_frequency_sample_rate_ratio;
         apply_buffer buffer sample
 
   let signal_low_pass t ~filter_order_half =

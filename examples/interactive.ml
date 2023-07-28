@@ -44,8 +44,7 @@ let mk_voices (keys : bool Signal.t Input.All_keyboard.t) =
 
 (* Removes any sharp changes from the mouse position which could cause bad
    sounds to come out of the filter controlled by the mouse *)
-let mouse_filter =
-  butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
 
 let mk_synth (input : (bool Signal.t, float Signal.t) Input.t) =
   let mouse_x = mouse_filter input.mouse.mouse_x in

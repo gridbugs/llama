@@ -20,7 +20,7 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
     velocity_01
     *.. adsr_linear ~gate ~attack_s ~decay_s:(const 1.0) ~sustain_01:(const 0.5)
           ~release_s
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+    |> butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc ~resonance:(const 1.0)
@@ -28,14 +28,13 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
   in
   let amp_env =
     ar_linear ~gate ~attack_s ~release_s
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+    |> butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
   in
   lazy_amplifier filtered_osc ~volume:amp_env
 
 (* Removes any sharp changes from the mouse position which could cause bad
    sounds to come out of the filter controlled by the mouse *)
-let mouse_filter =
-  butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
 
 let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_sequencer =
   let { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table } =
@@ -43,7 +42,7 @@ let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_sequencer =
   in
   let preset =
     Midi.Controller_table.get_raw controller_table 1
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 20.0)
+    |> butterworth_low_pass_filter ~cutoff_hz:(const 20.0)
   in
   let effect_clock = clock (const 8.0) in
   let hold = Midi.Controller_table.get_raw controller_table 64 in

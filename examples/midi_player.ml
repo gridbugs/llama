@@ -43,8 +43,7 @@ let midi_signal (data : Llama_midi.Data.t) =
   in
   voices
 
-let mouse_filter =
-  butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
 
 let midi_signal_with_effects (input : (bool Signal.t, float Signal.t) Input.t)
     data =

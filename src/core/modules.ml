@@ -305,7 +305,7 @@ end
 module Butterworth_filter = struct
   type t = Biquad_filter.Butterworth.t = {
     signal : float Signal.t;
-    half_power_frequency_hz : float Signal.t;
+    cutoff_hz : float Signal.t;
   }
 
   let signal_low_pass = Biquad_filter.Butterworth.signal_low_pass

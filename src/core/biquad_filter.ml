@@ -37,7 +37,7 @@ module Buffer = struct
 end
 
 module Butterworth = struct
-  type t = { signal : float Signal.t; half_power_frequency_hz : float Signal.t }
+  type t = { signal : float Signal.t; cutoff_hz : float Signal.t }
 
   let update_buffer_low_pass buffer ~half_power_frequency_sample_rate_ratio =
     let a = Float.tan (Float.pi *. half_power_frequency_sample_rate_ratio) in
@@ -73,11 +73,9 @@ module Butterworth = struct
       let buffer = Buffer.create filter_order_half in
       fun ctx ->
         let sample = Signal.sample t.signal ctx in
-        let half_power_frequency_hz =
-          Signal.sample t.half_power_frequency_hz ctx
-        in
+        let cutoff_hz = Signal.sample t.cutoff_hz ctx in
         let half_power_frequency_sample_rate_ratio =
-          half_power_frequency_hz /. ctx.sample_rate_hz |> Float.max 0.0
+          cutoff_hz /. ctx.sample_rate_hz |> Float.max 0.0
         in
         update_buffer buffer ~half_power_frequency_sample_rate_ratio;
         apply_buffer buffer sample

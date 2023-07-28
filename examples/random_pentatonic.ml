@@ -83,8 +83,7 @@ let pentatonic_strings ~sequencer_clock =
     random_pentatonic_sequencer 3 0.1 sequencer_clock
   in
   let osc_freq =
-    sequencer_freq
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 17.0)
+    sequencer_freq |> butterworth_low_pass_filter ~cutoff_hz:(const 17.0)
   in
   let osc =
     mean [ oscillator ~pulse_width_01:(const 0.2) (const Saw) osc_freq ]

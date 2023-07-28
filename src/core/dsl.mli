@@ -59,16 +59,10 @@ val random_sequencer : 'a t list -> float t -> bool t -> 'a sequencer_output
 val value_sequencer : 'a t list -> bool t -> 'a t
 
 val butterworth_low_pass_filter :
-  ?filter_order_half:int ->
-  float t ->
-  half_power_frequency_hz:float t ->
-  float t
+  ?filter_order_half:int -> float t -> cutoff_hz:float t -> float t
 
 val butterworth_high_pass_filter :
-  ?filter_order_half:int ->
-  float t ->
-  half_power_frequency_hz:float t ->
-  float t
+  ?filter_order_half:int -> float t -> cutoff_hz:float t -> float t
 
 val chebyshev_low_pass_filter :
   ?filter_order_half:int ->

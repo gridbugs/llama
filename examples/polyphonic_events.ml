@@ -118,8 +118,8 @@ let play_events events =
         in
         let filtered_osc =
           butterworth_low_pass_filter osc
-            ~half_power_frequency_hz:(filter_env |> scale 4000.0 |> offset 200.0)
-          |> butterworth_high_pass_filter ~half_power_frequency_hz:(const 500.0)
+            ~cutoff_hz:(filter_env |> scale 4000.0 |> offset 200.0)
+          |> butterworth_high_pass_filter ~cutoff_hz:(const 500.0)
         in
         filtered_osc *.. ar_linear ~gate ~attack_s:(const 0.05) ~release_s
         |> map ~f:(fun x -> x))
@@ -127,11 +127,11 @@ let play_events events =
   in
   let with_delay =
     delay synth ~time_s:(const 0.1) ~fill:0.0
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 2000.0)
+    |> butterworth_low_pass_filter ~cutoff_hz:(const 2000.0)
   in
   let with_delay2 =
     delay synth ~time_s:(const 0.2) ~fill:0.0
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 1000.0)
+    |> butterworth_low_pass_filter ~cutoff_hz:(const 1000.0)
   in
   synth +.. (with_delay |> scale 0.9) +.. (with_delay2 |> scale 0.8)
 

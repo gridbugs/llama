@@ -42,12 +42,10 @@ let signal_midi =
 
 let signal_sdl (input : (_, _) Input.t) =
   let mouse_x =
-    input.mouse.mouse_x
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+    input.mouse.mouse_x |> butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
   in
   let mouse_y =
-    input.mouse.mouse_y
-    |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
+    input.mouse.mouse_y |> butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
   in
   let preset = mouse_x in
   Keyboard_helper.voices ~keys:input.keyboard ~mid_note:(`C, 3)

@@ -74,19 +74,13 @@ let value_sequencer values clock =
   in
   value
 
-let butterworth_low_pass_filter ?(filter_order_half = 1) signal_
-    ~half_power_frequency_hz =
+let butterworth_low_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz =
   Butterworth_filter.(
-    signal_low_pass
-      { signal = signal_; half_power_frequency_hz }
-      ~filter_order_half)
+    signal_low_pass { signal = signal_; cutoff_hz } ~filter_order_half)
 
-let butterworth_high_pass_filter ?(filter_order_half = 1) signal_
-    ~half_power_frequency_hz =
+let butterworth_high_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz =
   Butterworth_filter.(
-    signal_high_pass
-      { signal = signal_; half_power_frequency_hz }
-      ~filter_order_half)
+    signal_high_pass { signal = signal_; cutoff_hz } ~filter_order_half)
 
 let chebyshev_low_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
     ~resonance =

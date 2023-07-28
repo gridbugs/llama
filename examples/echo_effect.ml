@@ -65,9 +65,8 @@ let () =
     mk_track_envelope ~fade_out_start:60.0 ~fade_out_duration:20.0
   in
   let output =
-    butterworth_low_pass_filter track
-      ~half_power_frequency_hz:(track_envelope |> scale 3000.0)
-    |> butterworth_high_pass_filter ~half_power_frequency_hz:(const 600.0)
+    butterworth_low_pass_filter track ~cutoff_hz:(track_envelope |> scale 3000.0)
+    |> butterworth_high_pass_filter ~cutoff_hz:(const 600.0)
   in
   let output =
     output

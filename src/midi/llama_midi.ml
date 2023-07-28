@@ -15,12 +15,12 @@ module Output = struct
       let rem = Char.chr (n land 0x7f) in
       let s = extend s 0 1 in
       (* Set top bit of beforelast byte *)
-      set s (length s - 2) @@ Char.chr (Char.code (get s (length s - 2)) lor 0x80);
+      set s (length s - 2)
+      @@ Char.chr (Char.code (get s (length s - 2)) lor 0x80);
       set s (length s - 1) rem;
       s
 
-  let variable_length_quantity n =
-    Bytes.to_string (variable_length_quantity' n)
+  let variable_length_quantity n = Bytes.to_string (variable_length_quantity' n)
 end
 
 module Unknown = struct
@@ -62,14 +62,14 @@ module Format = struct
 
   let write out t =
     output_byte out 0;
-    (match t with
+    match t with
     | Single_track -> output_byte out 0
     | Simultaneous_tracks n ->
         output_byte out 1;
         Output.int16_be out n
     | Sequential_tracks n ->
         output_byte out 2;
-        Output.int16_be out n)
+        Output.int16_be out n
 end
 
 module Division = struct
@@ -93,7 +93,8 @@ module Division = struct
 
   let write out = function
     | Ticks_per_quarter_note n ->
-        assert (0 <= n && n <= 0x7fff); (* n fits on 15 bits *)
+        assert (0 <= n && n <= 0x7fff);
+        (* n fits on 15 bits *)
         Output.int16_be out n
     | Time_code { smpte_format; ticks_per_frame } ->
         let negative_smpte_format = 128 - smpte_format in
@@ -139,7 +140,7 @@ module Header = struct
 
   let parse = Byte_array_parser.(Raw.parse >>| of_raw)
 
-  let write out { format_; division }=
+  let write out { format_; division } =
     Format.write out format_;
     Division.write out division
 end
@@ -250,44 +251,40 @@ module Channel_voice_message = struct
     let status_byte channel type_ =
       assert (0 <= channel && channel <= 15);
       assert (0 <= type_ && type_ <= 7);
-      Char.chr
-        (((type_ lor 0x8) (* set top bit *)
-            lsl 4)
-        lor (channel land 0xf));
+      Char.chr (((type_ lor 0x8) (* set top bit *) lsl 4) lor (channel land 0xf))
     in
     let channel_voice_message ~running_status channel type_ bytes =
       let status_byte = status_byte channel type_ in
       let s, ofs =
         match running_status with
-        | `Status s when s = status_byte -> Bytes.create (List.length bytes), 0
+        | `Status s when s = status_byte -> (Bytes.create (List.length bytes), 0)
         | `Status _ | `NoRunning ->
             let s = Bytes.create (1 + List.length bytes) in
             Bytes.set s 0 status_byte;
-            s, 1
+            (s, 1)
       in
       List.iteri (fun i b -> Bytes.set s (i + ofs) (byte_msb0 b)) bytes;
-      Bytes.to_string s, `Status status_byte
+      (Bytes.to_string s, `Status status_byte)
     in
     match message with
     | Note_off { note; velocity } ->
-        channel_voice_message ~running_status channel 0 [note; velocity]
+        channel_voice_message ~running_status channel 0 [ note; velocity ]
     | Note_on { note; velocity } ->
-        channel_voice_message ~running_status channel 1 [note; velocity]
+        channel_voice_message ~running_status channel 1 [ note; velocity ]
     | Polyphonic_key_pressure { note; pressure } ->
-        channel_voice_message ~running_status channel 2 [note; pressure]
+        channel_voice_message ~running_status channel 2 [ note; pressure ]
     | Control_change { controller; value } ->
-        channel_voice_message ~running_status channel 3 [controller; value]
+        channel_voice_message ~running_status channel 3 [ controller; value ]
     | Program_change { program } ->
-        channel_voice_message ~running_status channel 4 [program]
+        channel_voice_message ~running_status channel 4 [ program ]
     | Channel_pressure { pressure } ->
-        channel_voice_message ~running_status channel 5 [pressure];
+        channel_voice_message ~running_status channel 5 [ pressure ]
     | Pitch_wheel_change { signed_value } ->
         let value_14_bits = signed_value + 0x2000 in
         assert (0 <= value_14_bits && value_14_bits <= 0x3fff);
         let low_bits = signed_value land 0x7f in
         let high_bits = signed_value lsr 7 in
-        channel_voice_message ~running_status channel 6 [low_bits; high_bits];
-
+        channel_voice_message ~running_status channel 6 [ low_bits; high_bits ]
 end
 
 module System_message = struct
@@ -408,10 +405,7 @@ module System_message = struct
     | Active_sensing -> String.make 1 '\xfe'
     | Reset -> String.make 1 '\xff'
     | Undefined undefined ->
-        assert (
-          match undefined with
-          | 1 | 4 | 5 | 9 | 13 -> true
-          | _ -> false);
+        assert (match undefined with 1 | 4 | 5 | 9 | 13 -> true | _ -> false);
         String.make 1 @@ Char.chr @@ (0xf0 lor undefined)
 end
 
@@ -427,7 +421,8 @@ module Meta_event = struct
   let to_string = function
     | End_of_track -> "End_of_track"
     | Other { type_index; contents } ->
-        sprintf "(Other ((type_index %d) (contents %S)))" type_index (string_of_char_array contents)
+        sprintf "(Other ((type_index %d) (contents %S)))" type_index
+          (string_of_char_array contents)
 
   let parse =
     let open Byte_array_parser in
@@ -481,8 +476,8 @@ module Message = struct
 
   let encode ~running_status = function
     | Channel_voice_message m -> Channel_voice_message.encode ~running_status m
-    | Meta_event ev -> Meta_event.encode ev, `NoRunning
-    | System_message sysex -> System_message.encode sysex, `NoRunning
+    | Meta_event ev -> (Meta_event.encode ev, `NoRunning)
+    | System_message sysex -> (System_message.encode sysex, `NoRunning)
 end
 
 module Event = struct
@@ -517,7 +512,7 @@ module Event = struct
 
   let encode ~running_status { delta_time; message } =
     let msg, status = Message.encode ~running_status message in
-    Output.variable_length_quantity delta_time ^ msg, status
+    (Output.variable_length_quantity delta_time ^ msg, status)
 end
 
 module Track = struct
@@ -552,9 +547,8 @@ module Track = struct
       List.fold_left_map
         (fun running_status ev ->
           let encoded_event, status = Event.encode ~running_status ev in
-          status, encoded_event)
-        `NoRunning
-        trk
+          (status, encoded_event))
+        `NoRunning trk
     in
     let byte_length =
       List.fold_left (fun acc ev -> acc + String.length ev) 0 encoded_events

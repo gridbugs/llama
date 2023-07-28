@@ -35,8 +35,8 @@ let low_frequency_oscillator_01 ?(pulse_width_01 = const 0.5)
     frequency_hz reset_trigger
   |> to_01
 
-let clock frequency_hz = Clock.(signal { frequency_hz })
-let clock_of_period_s period_s = clock (recip period_s)
+let clock_of_frequency_hz frequency_hz = Clock.(signal { frequency_hz })
+let clock_of_period_s period_s = clock_of_frequency_hz (recip period_s)
 
 let clock_divide denominator clock =
   Clock_divider.(signal { clock; denominator })

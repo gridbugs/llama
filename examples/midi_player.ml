@@ -4,7 +4,7 @@ open Llama.Midi
 open Dsl
 
 let midi_signal (data : Llama_midi.Data.t) =
-  let clock = clock (const 1000.0) in
+  let clock = clock_of_frequency_hz (const 1000.0) in
   let track = List.hd data.tracks in
   let midi_event_signal = track_signal track clock in
   let sequencer_output =

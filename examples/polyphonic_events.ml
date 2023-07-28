@@ -89,7 +89,7 @@ end
 
 let play_events events =
   let num_voices = 4 in
-  let sequencer_clock = clock (const 480.0) in
+  let sequencer_clock = clock_of_frequency_hz (const 480.0) in
   let poly_seq_outputs =
     { Event_player_polyphonic.num_voices; events; clock = sequencer_clock }
     |> Event_player_polyphonic.signal

@@ -113,7 +113,7 @@ let play_possibly_with_drums wav_players which =
           ~bass:(Fun.const silence) clock
     | _ -> silence
   in
-  let clock = clock (const 16.0) in
+  let clock = clock_of_frequency_hz (const 16.0) in
   match which with
   | `Overdrive ->
       drum_machine (clock |> clock_divide 4)

@@ -36,7 +36,7 @@ let mk_voice gate freq_hz effect_clock =
   |> map ~f:(fun x -> Float.clamp_sym ~mag:2.0 (x *. 10.0))
 
 let mk_voices (keys : bool Signal.t Input.All_keyboard.t) =
-  let effect_clock = clock (const 8.0) in
+  let effect_clock = clock_of_frequency_hz (const 8.0) in
   Keyboard_helper.voices ~keys ~mid_note:(`C, 4)
   |> List.map ~f:(fun { Keyboard_helper.Voice.frequency_hz; gate } ->
          mk_voice gate frequency_hz effect_clock)

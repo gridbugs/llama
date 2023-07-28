@@ -44,7 +44,7 @@ let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_sequencer =
     Midi.Controller_table.get_raw controller_table 1
     |> butterworth_low_pass_filter ~cutoff_hz:(const 20.0)
   in
-  let effect_clock = clock (const 8.0) in
+  let effect_clock = clock_of_frequency_hz (const 8.0) in
   let hold = Midi.Controller_table.get_raw controller_table 64 in
   let voices =
     List.map voices

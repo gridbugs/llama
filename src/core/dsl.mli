@@ -27,7 +27,7 @@ val low_frequency_oscillator_01 :
   bool t ->
   float t
 
-val clock : float t -> bool t
+val clock_of_frequency_hz : float t -> bool t
 (** A clock signal with a given frequency in Hz *)
 
 val clock_of_period_s : float t -> bool t

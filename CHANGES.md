@@ -1,5 +1,7 @@
 ## 0.0.2 (unreleased)
 
+- Rename `clock` constructor to `clock_of_frequency_hz`
+- Use `floatarray` instead of `float array`
 - Add `saturation` operator
 - Add `map2` and `map3` combinators
 - Add missing `downsample` argument to visualized signal players

@@ -33,7 +33,7 @@ let midi_signal (data : Llama_midi.Data.t) =
           |> exp_01 1.0
         in
         let filtered_osc =
-          chebyshev_low_pass_filter osc ~epsilon:(const 4.0)
+          chebyshev_low_pass_filter osc ~resonance:(const 4.0)
             ~cutoff_hz:(sum [ const 100.0; filter_env |> scale 12000.0 ])
         in
         filtered_osc
@@ -51,9 +51,9 @@ let midi_signal_with_effects (input : (bool Signal.t, float Signal.t) Input.t)
   let mouse_x = mouse_filter input.mouse.mouse_x in
   let mouse_y = mouse_filter input.mouse.mouse_y in
   midi_signal data
-  |> chebyshev_low_pass_filter ~epsilon:(const 2.0)
+  |> chebyshev_low_pass_filter ~resonance:(const 2.0)
        ~cutoff_hz:(mouse_x |> exp_01 4.0 |> scale 10000.0 |> offset 100.0)
-  |> chebyshev_high_pass_filter ~epsilon:(const 4.0)
+  |> chebyshev_high_pass_filter ~resonance:(const 4.0)
        ~cutoff_hz:(mouse_y |> exp_01 4.0 |> scale 2000.0 |> offset 100.0)
 
 module Args = struct

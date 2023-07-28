@@ -97,14 +97,15 @@ module Chebyshev = struct
   type t = {
     signal : float Signal.t;
     cutoff_hz : float Signal.t;
-    epsilon : float Signal.t;
+    resonance : float Signal.t;
   }
 
-  let update_buffer_low_pass buffer ~cutoff_sample_rate_ratio ~epsilon =
+  let update_buffer_low_pass buffer ~cutoff_sample_rate_ratio ~resonance =
     let a = Float.tan (Float.pi *. cutoff_sample_rate_ratio) in
     let a2 = a *. a in
     let u =
-      Float.log ((1.0 +. Float.sqrt (1.0 +. (epsilon *. epsilon))) /. epsilon)
+      Float.log
+        ((1.0 +. Float.sqrt (1.0 +. (resonance *. resonance))) /. resonance)
     in
     let n = Int.to_float (Array.length buffer * 2) in
     let su = Float.sinh (u /. n) in
@@ -121,11 +122,12 @@ module Chebyshev = struct
         entry.d1 <- 2.0 *. (1.0 -. (a2 *. c)) /. s;
         entry.d2 <- -.((a2 *. c) -. (2.0 *. a *. b) +. 1.0) /. s)
 
-  let update_buffer_high_pass buffer ~cutoff_sample_rate_ratio ~epsilon =
+  let update_buffer_high_pass buffer ~cutoff_sample_rate_ratio ~resonance =
     let a = Float.tan (Float.pi *. cutoff_sample_rate_ratio) in
     let a2 = a *. a in
     let u =
-      Float.log ((1.0 +. Float.sqrt (1.0 +. (epsilon *. epsilon))) /. epsilon)
+      Float.log
+        ((1.0 +. Float.sqrt (1.0 +. (resonance *. resonance))) /. resonance)
     in
     let n = Int.to_float (Array.length buffer * 2) in
     let su = Float.sinh (u /. n) in
@@ -163,10 +165,12 @@ module Chebyshev = struct
         let cutoff_sample_rate_ratio =
           cutoff_hz /. ctx.sample_rate_hz |> Float.max 0.0
         in
-        let epsilon = Signal.sample t.epsilon ctx |> Float.max epsilon_min in
-        update_buffer buffer ~cutoff_sample_rate_ratio ~epsilon;
+        let resonance =
+          Signal.sample t.resonance ctx |> Float.max epsilon_min
+        in
+        update_buffer buffer ~cutoff_sample_rate_ratio ~resonance;
         let output_scaled = apply_buffer buffer sample in
-        let scale_factor = (1.0 -. Float.exp (-.epsilon)) /. 2.0 in
+        let scale_factor = (1.0 -. Float.exp (-.resonance)) /. 2.0 in
         output_scaled /. scale_factor
 
   let signal_low_pass t ~filter_order_half =

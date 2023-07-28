@@ -8,7 +8,7 @@ let mk_voice frequency gate ~preset =
   let osc =
     mean
       [ oscillator (const Saw) saw_freq; oscillator (const Pulse) square_freq ]
-    |> chebyshev_high_pass_filter ~epsilon:(const 2.0)
+    |> chebyshev_high_pass_filter ~resonance:(const 2.0)
          ~cutoff_hz:(sum [ const 200.0; preset |> scale 2000.0 ])
   in
   let amp_env =
@@ -18,7 +18,7 @@ let mk_voice frequency gate ~preset =
     ar_linear ~gate ~attack_s:(const 0.01) ~release_s:(const 0.01)
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 0.1)
+    chebyshev_low_pass_filter osc ~resonance:(const 0.1)
       ~cutoff_hz:(sum [ const 1000.0; filter_env |> scale 4000.0 ])
   in
   lazy_amplifier ~volume:amp_env filtered_osc
@@ -54,7 +54,7 @@ let signal_sdl (input : (_, _) Input.t) =
   |> List.map ~f:(fun { Keyboard_helper.Voice.frequency_hz; gate } ->
          mk_voice (const frequency_hz) gate ~preset)
   |> sum
-  |> chebyshev_low_pass_filter ~epsilon:(const 2.0)
+  |> chebyshev_low_pass_filter ~resonance:(const 2.0)
        ~cutoff_hz:(sum [ const 500.0; mouse_y |> scale 8000.0 ])
 (*|> map ~f:(fun x -> x *. 2.0 |> Float.clamp_sym ~mag:1.0) *)
 

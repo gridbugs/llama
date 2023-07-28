@@ -23,7 +23,7 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
     |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 10.0)
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
+    chebyshev_low_pass_filter osc ~resonance:(const 1.0)
       ~cutoff_hz:(sum [ const 1000.0; filter_env |> scale 2000.0 ])
   in
   let amp_env =
@@ -56,7 +56,7 @@ let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_sequencer =
   let mouse_y = mouse_filter input.mouse.mouse_y in
   voices
   |> chebyshev_low_pass_filter
-       ~epsilon:(mouse_y |> exp_01 4.0 |> scale 10.0)
+       ~resonance:(mouse_y |> exp_01 4.0 |> scale 10.0)
        ~cutoff_hz:
          (const 1.0 -.. preset |> exp_01 4.0 |> scale 8000.0 |> offset 100.0)
   |> both (both mouse_x hold)

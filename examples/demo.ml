@@ -19,7 +19,7 @@ let signal =
     ~f:(fun { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } ->
       mk_voice (frequency_hz *.. pitch_wheel_multiplier) gate)
   |> sum
-  |> chebyshev_low_pass_filter ~epsilon:(const 5.0)
+  |> chebyshev_low_pass_filter ~resonance:(const 5.0)
        ~cutoff_hz:((const 1.0 -.. preset) *.. const 5000.0)
   |> map ~f:(fun x -> x *. 2.0 |> Float.clamp_sym ~mag:1.0)
   |> echo ~f:(scale 0.5) ~delay_s:(const 0.4)

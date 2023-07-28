@@ -19,7 +19,7 @@ let mk_voice gate freq_hz effect_clock =
       ~sustain_01:(const 1.0) ~release_s
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 5.0)
+    chebyshev_low_pass_filter osc ~resonance:(const 5.0)
       ~cutoff_hz:
         (sum
            [
@@ -53,7 +53,7 @@ let mk_synth (input : (bool Signal.t, float Signal.t) Input.t) =
   let echo_effect signal = signal |> scale 0.6 in
   mk_voices input.keyboard
   |> chebyshev_low_pass_filter
-       ~epsilon:(mouse_y |> exp_01 1.0 |> scale 10.0)
+       ~resonance:(mouse_y |> exp_01 1.0 |> scale 10.0)
        ~cutoff_hz:(mouse_x |> exp_01 4.0 |> scale 8000.0 |> offset 100.0)
   |> echo ~f:echo_effect ~delay_s:(const 0.3)
   |> echo ~f:echo_effect ~delay_s:(const 0.5)

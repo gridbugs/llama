@@ -89,14 +89,18 @@ let butterworth_high_pass_filter ?(filter_order_half = 1) signal_
       ~filter_order_half)
 
 let chebyshev_low_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
-    ~epsilon =
+    ~resonance =
   Chebyshev_filter.(
-    signal_low_pass { signal = signal_; cutoff_hz; epsilon } ~filter_order_half)
+    signal_low_pass
+      { signal = signal_; cutoff_hz; resonance }
+      ~filter_order_half)
 
 let chebyshev_high_pass_filter ?(filter_order_half = 1) signal_ ~cutoff_hz
-    ~epsilon =
+    ~resonance =
   Chebyshev_filter.(
-    signal_high_pass { signal = signal_; cutoff_hz; epsilon } ~filter_order_half)
+    signal_high_pass
+      { signal = signal_; cutoff_hz; resonance }
+      ~filter_order_half)
 
 let sample_and_hold signal_ trigger =
   Sample_and_hold.(signal { signal = signal_; trigger })

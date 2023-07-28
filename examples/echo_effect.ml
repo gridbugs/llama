@@ -31,13 +31,14 @@ let () =
     ar_linear ~gate ~attack_s:(const 0.01) ~release_s:(const 0.1)
   in
   let filtered_osc =
-    chebyshev_low_pass_filter osc ~epsilon:(const 1.0)
+    chebyshev_low_pass_filter osc ~resonance:(const 1.0)
       ~cutoff_hz:(envelope |> scale 500.0 |> offset 200.0)
   in
   let env'd_osc = filtered_osc *.. envelope in
   let echo_effect signal =
     signal |> scale 0.5
-    |> chebyshev_low_pass_filter ~epsilon:(const 0.8) ~cutoff_hz:(const 2000.0)
+    |> chebyshev_low_pass_filter ~resonance:(const 0.8)
+         ~cutoff_hz:(const 2000.0)
   in
   let track =
     env'd_osc

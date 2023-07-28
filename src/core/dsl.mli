@@ -74,14 +74,14 @@ val chebyshev_low_pass_filter :
   ?filter_order_half:int ->
   float t ->
   cutoff_hz:float t ->
-  epsilon:float t ->
+  resonance:float t ->
   float t
 
 val chebyshev_high_pass_filter :
   ?filter_order_half:int ->
   float t ->
   cutoff_hz:float t ->
-  epsilon:float t ->
+  resonance:float t ->
   float t
 
 val sample_and_hold : float t -> bool t -> float t

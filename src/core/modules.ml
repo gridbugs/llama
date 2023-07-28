@@ -316,7 +316,7 @@ module Chebyshev_filter = struct
   type t = Biquad_filter.Chebyshev.t = {
     signal : float Signal.t;
     cutoff_hz : float Signal.t;
-    epsilon : float Signal.t;
+    resonance : float Signal.t;
   }
 
   let signal_low_pass = Biquad_filter.Chebyshev.signal_low_pass

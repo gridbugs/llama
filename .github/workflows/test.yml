@@ -7,6 +7,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set-up OCaml
+      uses: ocaml/setup-ocaml@v2
+    - uses: actions/checkout@v3
+    - run: opam install -y dune ocamlformat
+    - run: opam exec -- dune fmt
+
   build-and-run-tests:
     runs-on: ${{ matrix.os }}
     strategy:

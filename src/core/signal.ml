@@ -58,6 +58,11 @@ let both a b =
       let xb = sample b ctx in
       (xa, xb))
 
+let map2 t1 t2 ~f = both t1 t2 |> map ~f:(fun (x1, x2) -> f x1 x2)
+
+let map3 t1 t2 t3 ~f =
+  both t1 (both t2 t3) |> map ~f:(fun (x1, (x2, x3)) -> f x1 x2 x3)
+
 let const x = of_raw (Fun.const x)
 let of_ref ref = of_raw (fun _ -> !ref)
 

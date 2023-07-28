@@ -17,6 +17,8 @@ val of_raw : 'a Raw.t -> 'a t
 val of_ref : 'a ref -> 'a t
 val sample : 'a t -> Ctx.t -> 'a
 val map : 'a t -> f:('a -> 'b) -> 'b t
+val map2 : 'a t -> 'b t -> f:('a -> 'b -> 'c) -> 'c t
+val map3 : 'a t -> 'b t -> 'c t -> f:('a -> 'b -> 'c -> 'd) -> 'd t
 val both : 'a t -> 'b t -> ('a * 'b) t
 val const : 'a -> 'a t
 val var : 'a -> 'a t * 'a ref

@@ -10,6 +10,12 @@ module Controller_table : sig
   val volume : t -> float Signal.t
 end
 
+module Gate_table : sig
+  type t
+
+  val get : t -> int -> Signal.Gate.t
+end
+
 module Midi_sequencer : sig
   type voice = {
     frequency_hz : float Signal.t;
@@ -23,6 +29,7 @@ module Midi_sequencer : sig
     controller_table : Controller_table.t;
   }
 
+  val key_gates : channel:int -> Event.t list Signal.t -> Gate_table.t
   val signal : channel:int -> polyphony:int -> Event.t list Signal.t -> output
 end
 

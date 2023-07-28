@@ -62,7 +62,7 @@
  (public_name midi_interactive)
  (modules midi_interactive)
  (package llama_interactive)
- (libraries llama_interactive))
+ (libraries llama_interactive llama.io))
 
 (executable
  (public_name sandstorm)

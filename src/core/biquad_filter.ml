@@ -149,7 +149,7 @@ module Chebyshev = struct
      filter. It's expected that epsilon will be controlled by dials or other
      inputs with a possible 0 value so to protect users from its bad behaviour
      at low values it's hard capped to be above 0.01. *)
-  let epsilon_min = 0.01
+  let epsilon_min = 0.1
 
   let raw t ~update_buffer ~apply_buffer ~filter_order_half =
     if filter_order_half <= 0 then

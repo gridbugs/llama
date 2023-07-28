@@ -51,5 +51,7 @@ module Midi : sig
     channel:int ->
     polyphony:int ->
     (Midi_sequencer.output, [ `No_such_port ]) result
-  (** Create a midi sequencer that processes midi events on a single midi channel from a given port *)
+  (** Create a midi sequencer that processes midi events on a single midi
+      channel from a given port. Use this for simple cases where you're only
+      interested in events on a single channel. *)
 end

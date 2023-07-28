@@ -11,7 +11,7 @@ module Controller_table = struct
     let t = Array.map refs ~f:Signal.of_ref in
     (t, refs)
 
-  let get_raw t i = Array.get t i
+  let get_raw = Array.get
   let modulation t = get_raw t 1
   let volume t = get_raw t 7
 end
@@ -23,7 +23,15 @@ let pitch_wheel_to_pitch_multiplier =
     let pitch_wheel_1 = Int.to_float pitch_wheel /. pitch_wheel_max in
     Float.pow max_ratio pitch_wheel_1
 
+module Gate_table = struct
+  type t = Signal.Gate.t array
+
+  let get = Array.get
+end
+
 module Midi_sequencer = struct
+  let num_notes = 128
+
   type voice = {
     frequency_hz : float Signal.t;
     gate : Signal.Gate.t;
@@ -37,6 +45,31 @@ module Midi_sequencer = struct
   }
 
   type voice_state = { note : int; gate : bool; velocity : int }
+
+  let key_gates ~channel (track_signal : Event.t list Signal.t) =
+    let ref_array = Array.init num_notes ~f:(fun _ -> ref false) in
+    let update_signal =
+      Signal.of_raw (fun ctx ->
+          let voice_messages =
+            Signal.sample track_signal ctx
+            |> List.filter_map ~f:(fun (event : Event.t) ->
+                   match event.message with
+                   | Message.Channel_voice_message voice_message ->
+                       if voice_message.channel == channel then
+                         Some voice_message.message
+                       else None
+                   | _ -> None)
+          in
+          List.iter voice_messages ~f:(fun message ->
+              match message with
+              | Llama_midi.Channel_voice_message.Note_off { note; _ } ->
+                  Array.get ref_array note := false
+              | Note_on { note; _ } -> Array.get ref_array note := true
+              | _ -> ()))
+    in
+    Array.init num_notes ~f:(fun i ->
+        Signal.map update_signal ~f:(fun _ -> !(Array.get ref_array i))
+        |> Signal.gate)
 
   let signal ~channel ~polyphony (track_signal : Event.t list Signal.t) =
     let voices =
@@ -52,7 +85,7 @@ module Midi_sequencer = struct
       loop 0
     in
     let currently_playing_voice_index_by_note =
-      Array.init 128 ~f:(Fun.const None)
+      Array.init num_notes ~f:(Fun.const None)
     in
     let controller_table, controller_refs = Controller_table.create () in
     let pitch_wheel_multiplier = ref 1.0 in

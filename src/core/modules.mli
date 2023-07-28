@@ -1,12 +1,12 @@
 module Oscillator : sig
-  type waveform = Sine | Saw | Triangle | Square | Noise
+  type waveform = Sine | Saw | Triangle | Pulse | Noise
 
   val waveform_to_string : waveform -> string
 
   type t = {
     waveform : waveform Signal.t;
     frequency_hz : float Signal.t;
-    square_wave_pulse_width_01 : float Signal.t;
+    pulse_width_01 : float Signal.t;
     reset_trigger : bool Signal.t;
     reset_offset_01 : float Signal.t;
   }

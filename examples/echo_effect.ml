@@ -22,9 +22,8 @@ let () =
   let osc =
     sum
       [
-        oscillator ~square_wave_pulse_width_01:(const 0.1) (const Square)
-          sequencer_freq;
-        oscillator ~square_wave_pulse_width_01:(const 0.1) (const Square)
+        oscillator ~pulse_width_01:(const 0.1) (const Pulse) sequencer_freq;
+        oscillator ~pulse_width_01:(const 0.1) (const Pulse)
           (sequencer_freq |> scale 2.0);
       ]
   in

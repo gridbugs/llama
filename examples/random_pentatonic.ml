@@ -31,9 +31,8 @@ let pentatonic_overdrive ~sequencer_clock ~effect_clock =
   let osc =
     mean
       [
-        oscillator ~square_wave_pulse_width_01:(const 0.2) (const Square)
-          osc_freq;
-        oscillator ~square_wave_pulse_width_01:(const 0.2) (const Square)
+        oscillator ~pulse_width_01:(const 0.2) (const Pulse) osc_freq;
+        oscillator ~pulse_width_01:(const 0.2) (const Pulse)
           (osc_freq |> scale 1.5);
       ]
   in
@@ -87,10 +86,7 @@ let pentatonic_strings ~sequencer_clock =
     |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 17.0)
   in
   let osc =
-    mean
-      [
-        oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw) osc_freq;
-      ]
+    mean [ oscillator ~pulse_width_01:(const 0.2) (const Saw) osc_freq ]
   in
   let release_s = const 0.4 in
   let filter_env =

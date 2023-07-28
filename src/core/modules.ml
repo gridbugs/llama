@@ -3,19 +3,19 @@ module Ctx = Signal.Ctx
 module Raw = Signal.Raw
 
 module Oscillator = struct
-  type waveform = Sine | Saw | Triangle | Square | Noise
+  type waveform = Sine | Saw | Triangle | Pulse | Noise
 
   let waveform_to_string = function
     | Sine -> "sine"
     | Saw -> "saw"
     | Triangle -> "triangle"
-    | Square -> "square"
+    | Pulse -> "square"
     | Noise -> "noise"
 
   type t = {
     waveform : waveform Signal.t;
     frequency_hz : float Signal.t;
-    square_wave_pulse_width_01 : float Signal.t;
+    pulse_width_01 : float Signal.t;
     reset_trigger : bool Signal.t;
     reset_offset_01 : float Signal.t;
   }
@@ -39,10 +39,8 @@ module Oscillator = struct
           | Sine -> Float.sin (state *. Float.pi *. 2.0)
           | Saw -> (state *. 2.0) -. 1.0
           | Triangle -> (Float.abs ((state *. 2.0) -. 1.0) *. 2.0) -. 1.0
-          | Square ->
-              if state < Signal.sample t.square_wave_pulse_width_01 ctx then
-                -1.0
-              else 1.0
+          | Pulse ->
+              if state < Signal.sample t.pulse_width_01 ctx then -1.0 else 1.0
           | Noise -> Random.float 2.0 -. 1.0
         in
         (Some state, x))

@@ -4,18 +4,15 @@ include module type of struct
   include Signal
 end
 
-type waveform = Sine | Saw | Triangle | Square | Noise
+type waveform = Sine | Saw | Triangle | Pulse | Noise
 
 val waveform_to_string : waveform -> string
-
-val oscillator :
-  ?square_wave_pulse_width_01:float t -> waveform t -> float t -> float t
-
+val oscillator : ?pulse_width_01:float t -> waveform t -> float t -> float t
 val noise_01 : unit -> float t
 val noise : min:float t -> max:float t -> float t
 
 val low_frequency_oscillator :
-  ?square_wave_pulse_width_01:float t ->
+  ?pulse_width_01:float t ->
   ?reset_offset_01:float t ->
   waveform t ->
   float t ->
@@ -23,7 +20,7 @@ val low_frequency_oscillator :
   float t
 
 val low_frequency_oscillator_01 :
-  ?square_wave_pulse_width_01:float t ->
+  ?pulse_width_01:float t ->
   ?reset_offset_01:float t ->
   waveform t ->
   float t ->

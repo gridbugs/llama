@@ -2,17 +2,17 @@ open StdLabels
 open Modules
 include Signal
 
-type waveform = Oscillator.waveform = Sine | Saw | Triangle | Square | Noise
+type waveform = Oscillator.waveform = Sine | Saw | Triangle | Pulse | Noise
 
 let waveform_to_string = Oscillator.waveform_to_string
 
-let oscillator ?(square_wave_pulse_width_01 = const 0.5) waveform frequency_hz =
+let oscillator ?(pulse_width_01 = const 0.5) waveform frequency_hz =
   Oscillator.(
     signal
       {
         waveform;
         frequency_hz;
-        square_wave_pulse_width_01;
+        pulse_width_01;
         reset_offset_01 = const 0.0;
         reset_trigger = const false;
       })
@@ -23,21 +23,15 @@ let noise ~min ~max =
   both (noise_01 ()) (both max min)
   |> map ~f:(fun (noise, (max, min)) -> min +. (noise *. (max -. min)))
 
-let low_frequency_oscillator ?(square_wave_pulse_width_01 = const 0.5)
+let low_frequency_oscillator ?(pulse_width_01 = const 0.5)
     ?(reset_offset_01 = const 0.0) waveform frequency_hz reset_trigger =
   Oscillator.(
     signal
-      {
-        waveform;
-        frequency_hz;
-        square_wave_pulse_width_01;
-        reset_offset_01;
-        reset_trigger;
-      })
+      { waveform; frequency_hz; pulse_width_01; reset_offset_01; reset_trigger })
 
-let low_frequency_oscillator_01 ?(square_wave_pulse_width_01 = const 0.5)
+let low_frequency_oscillator_01 ?(pulse_width_01 = const 0.5)
     ?(reset_offset_01 = const 0.0) waveform frequency_hz reset_trigger =
-  low_frequency_oscillator ~square_wave_pulse_width_01 ~reset_offset_01 waveform
+  low_frequency_oscillator ~pulse_width_01 ~reset_offset_01 waveform
     frequency_hz reset_trigger
   |> to_01
 
@@ -119,7 +113,7 @@ let delay signal_ ~time_s ~fill =
 let clock_delay time_s clock = delay clock ~time_s:(const time_s) ~fill:false
 
 let periodic_gate ~frequency_hz ~duty_01 =
-  oscillator ~square_wave_pulse_width_01:duty_01 (const Square) frequency_hz
+  oscillator ~pulse_width_01:duty_01 (const Pulse) frequency_hz
   |> map ~f:(fun x -> x < 0.0)
 
 let feedback ~f =

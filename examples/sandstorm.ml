@@ -7,7 +7,7 @@ let mk_voice frequency gate ~preset =
   let square_freq = frequency |> scale 2.0 in
   let osc =
     mean
-      [ oscillator (const Saw) saw_freq; oscillator (const Square) square_freq ]
+      [ oscillator (const Saw) saw_freq; oscillator (const Pulse) square_freq ]
     |> chebyshev_high_pass_filter ~epsilon:(const 2.0)
          ~cutoff_hz:(sum [ const 200.0; preset |> scale 2000.0 ])
   in

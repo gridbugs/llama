@@ -18,10 +18,10 @@ let midi_signal (data : Llama_midi.Data.t) =
           mean
             [
               oscillator (const Saw) oscillator_frequency_hz;
-              oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw)
+              oscillator ~pulse_width_01:(const 0.2) (const Saw)
                 (oscillator_frequency_hz |> scale 2.0)
               |> scale 0.5;
-              oscillator ~square_wave_pulse_width_01:(const 0.2) (const Saw)
+              oscillator ~pulse_width_01:(const 0.2) (const Saw)
                 (oscillator_frequency_hz |> scale 4.0)
               |> scale 0.25;
             ]

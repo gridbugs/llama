@@ -11,8 +11,7 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
   let osc =
     mean
       [
-        oscillator ~square_wave_pulse_width_01:(const 0.1) waveform
-          oscillator_frequency_hz;
+        oscillator ~pulse_width_01:(const 0.1) waveform oscillator_frequency_hz;
       ]
   in
   let attack_s = const 0.01 +.. (const 0.1 *.. (const 1.0 -.. velocity_01)) in

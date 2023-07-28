@@ -20,7 +20,7 @@ let hsv_to_rgb h s v =
 
 let waveform_sequencer =
   value_sequencer
-    [ const Sine; const Triangle; const Saw; const Square; const Noise ]
+    [ const Sine; const Triangle; const Saw; const Pulse; const Noise ]
 
 let () =
   let clock = clock_of_period_s (const 1.0) in

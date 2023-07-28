@@ -49,6 +49,15 @@
  (name llama_interactive)
  (synopsis "Visualization and live interaction for Llama synthesizer library")
  (depends
+  (ocaml (>= "4.13"))
   (llama (= :version))
   (tsdl (>= 1))
   (conf-pkg-config :build)))
+
+(package
+ (name llama_tests)
+ (synopsis "Tests for llama packages")
+ (depends
+  (ocaml (>= "4.13"))
+  (llama_midi (= :version))
+  ppx_inline_test))

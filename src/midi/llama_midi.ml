@@ -657,3 +657,7 @@ module File_writer = struct
     List.iter (Track.write t.out) tracks;
     close_out t.out
 end
+
+module For_test = struct
+  module Byte_array_parser = Byte_array_parser
+end

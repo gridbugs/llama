@@ -1,0 +1,6 @@
+(library
+ (name llama_tests)
+ (package llama_tests)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test))
+ (libraries llama_midi))

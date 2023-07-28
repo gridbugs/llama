@@ -108,3 +108,11 @@ module File_writer : sig
   val of_path : string -> t
   val write : t -> Data.t -> unit
 end
+
+module For_test : sig
+  module Byte_array_parser : sig
+    include module type of struct
+      include Byte_array_parser
+    end
+  end
+end

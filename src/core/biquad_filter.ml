@@ -142,10 +142,14 @@ module Chebyshev = struct
         entry.d1 <- 2.0 *. (c -. a2) /. s;
         entry.d2 <- -.(a2 -. (2.0 *. a *. b) +. c) /. s)
 
-  (* Arbitrary small constant below which you don't hear much difference. We
-     have this to protect against the case where epsilon is set to 0 which
-     would otherwise result in silence. *)
-  let epsilon_min = 0.000000001
+  (* The behaviour of the filter is not defined with an epsilon of 0. Also,
+     with an epsilon of 0.01 the filter sounds similar to the butterworth
+     filter. Decreasing the epsilon further has the effect of reducing the
+     effect of the filter, and going too far makes it behave like the identity
+     filter. It's expected that epsilon will be controlled by dials or other
+     inputs with a possible 0 value so to protect users from its bad behaviour
+     at low values it's hard capped to be above 0.01. *)
+  let epsilon_min = 0.01
 
   let raw t ~update_buffer ~apply_buffer ~filter_order_half =
     if filter_order_half <= 0 then

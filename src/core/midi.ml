@@ -11,7 +11,9 @@ module Controller_table = struct
     let t = Array.map refs ~f:Signal.of_ref in
     (t, refs)
 
-  let get t i = Array.get t i
+  let get_raw t i = Array.get t i
+  let modulation t = get_raw t 1
+  let volume t = get_raw t 7
 end
 
 let pitch_wheel_to_pitch_multiplier =

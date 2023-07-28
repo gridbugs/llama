@@ -42,11 +42,11 @@ let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_sequencer =
     midi_sequencer
   in
   let preset =
-    Midi.Controller_table.get controller_table 1
+    Midi.Controller_table.get_raw controller_table 1
     |> butterworth_low_pass_filter ~half_power_frequency_hz:(const 20.0)
   in
   let effect_clock = clock (const 8.0) in
-  let hold = Midi.Controller_table.get controller_table 64 in
+  let hold = Midi.Controller_table.get_raw controller_table 64 in
   let voices =
     List.map voices
       ~f:(make_voice effect_clock pitch_wheel_multiplier (const Saw))

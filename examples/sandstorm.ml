@@ -31,7 +31,7 @@ let signal_midi =
   with
   | Ok { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table }
     ->
-      let preset = Midi.Controller_table.get controller_table 1 in
+      let preset = Midi.Controller_table.get_raw controller_table 1 in
       List.map voices
         ~f:(fun { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } ->
           mk_voice (frequency_hz *.. pitch_wheel_multiplier) gate ~preset)

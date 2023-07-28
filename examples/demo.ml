@@ -14,7 +14,7 @@ let signal =
     |> Midi.live_midi_sequencer ~port:1 ~channel:0 ~polyphony:12
     |> Result.get_ok
   in
-  let preset = Midi.Controller_table.get controller_table 1 in
+  let preset = Midi.Controller_table.modulation controller_table in
   List.map voices
     ~f:(fun { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } ->
       mk_voice (frequency_hz *.. pitch_wheel_multiplier) gate)

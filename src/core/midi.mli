@@ -5,7 +5,9 @@ end
 module Controller_table : sig
   type t
 
-  val get : t -> int -> float Signal.t
+  val get_raw : t -> int -> float Signal.t
+  val modulation : t -> float Signal.t
+  val volume : t -> float Signal.t
 end
 
 module Midi_sequencer : sig

@@ -36,6 +36,8 @@ val visualize :
   float Llama.Signal.t
 
 val play_signal_visualized_lwt :
+  ?downsample:int ->
+  ?scale_output_volume:float ->
   ?title:string ->
   ?width:int ->
   ?height:int ->
@@ -46,12 +48,13 @@ val play_signal_visualized_lwt :
   ?sample_scale:float ->
   ?sample_to_rgba_01:(float -> Types.rgba_01) ->
   ?stride:int ->
-  ?scale_output_volume:float ->
   ?stable:bool ->
   float Signal.t ->
   'a Lwt.t
 
 val play_signal_visualized :
+  ?downsample:int ->
+  ?scale_output_volume:float ->
   ?title:string ->
   ?width:int ->
   ?height:int ->
@@ -62,7 +65,6 @@ val play_signal_visualized :
   ?sample_scale:float ->
   ?sample_to_rgba_01:(float -> Types.rgba_01) ->
   ?stride:int ->
-  ?scale_output_volume:float ->
   ?stable:bool ->
   float Signal.t ->
   'a

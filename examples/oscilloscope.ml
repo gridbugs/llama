@@ -26,7 +26,8 @@ let () =
   let clock = clock_of_period_s (const 1.0) in
   let waveform = waveform_sequencer clock in
   let lfo =
-    low_frequency_oscillator_01 (const Triangle) (const 0.1) (const false)
+    low_frequency_oscillator_01 (const Triangle) (const 0.1)
+      Signal.Trigger.never
     |> scale 2000.0 |> offset 200.0
   in
   let signal = oscillator waveform lfo in

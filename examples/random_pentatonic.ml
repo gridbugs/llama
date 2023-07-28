@@ -25,7 +25,7 @@ let pentatonic_overdrive ~sequencer_clock ~effect_clock =
     random_pentatonic_sequencer 2 0.1 sequencer_clock
   in
   let lfo =
-    low_frequency_oscillator_01 (const Sine) (const (1.0 /. 13.0)) never
+    low_frequency_oscillator_01 (const Sine) (const (1.0 /. 13.0)) Trigger.never
   in
   let osc_freq = sequencer_freq in
   let osc =
@@ -113,7 +113,10 @@ let play_possibly_with_drums wav_players which =
           ~bass:(Fun.const silence) clock
     | _ -> silence
   in
-  let clock = clock_of_frequency_hz (const 16.0) in
+  let clock =
+    clock_of_frequency_hz (const 16.0)
+    |> Trigger.debug_print_sample_index_on_true
+  in
   match which with
   | `Overdrive ->
       drum_machine (clock |> clock_divide 4)

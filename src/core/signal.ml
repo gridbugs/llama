@@ -47,6 +47,11 @@ let sample t (ctx : Ctx.t) =
     t.next_sample_index <- t.next_sample_index + 1;
     sample_and_update t ctx)
 
+let map_ctx t ~f =
+  of_raw (fun ctx ->
+      let x = sample t ctx in
+      f x ctx)
+
 let map t ~f =
   of_raw (fun ctx ->
       let x = sample t ctx in
@@ -72,16 +77,6 @@ let var x =
 
 let silence = const 0.0
 let never = const false
-
-let trigger ?(init = false) t =
-  of_raw
-    (let previous = ref init in
-     fun ctx ->
-       let sample = sample t ctx in
-       let trigger_sample = sample && not !previous in
-       previous := sample;
-       trigger_sample)
-
 let scale s = map ~f:(fun x -> x *. s)
 let scale_div s = map ~f:(fun x -> x /. s)
 let offset s = map ~f:(fun x -> x +. s)
@@ -100,6 +95,11 @@ let debug t ~f =
 
 let debug_print_float_endline =
   debug ~f:(fun x -> print_endline (Printf.sprintf "%f" x))
+
+let debug_print_sample_index_on_true =
+  map_ctx ~f:(fun x ctx ->
+      if x then print_endline (Printf.sprintf "%d" ctx.sample_index);
+      x)
 
 let sum ts =
   of_raw (fun ctx ->
@@ -120,3 +120,34 @@ let sub a b = both a b |> map ~f:(fun (a, b) -> a -. b)
 let ( -.. ) a b = sub a b
 let div a b = both a b |> map ~f:(fun (a, b) -> a /. b)
 let ( /.. ) a b = div a b
+
+module Trigger = struct
+  type nonrec t = bool t
+
+  let rising_edge ?(init = false) t =
+    of_raw
+      (let previous = ref init in
+       fun ctx ->
+         let sample = sample t ctx in
+         let trigger_sample = sample && not !previous in
+         previous := sample;
+         trigger_sample)
+
+  let of_signal_unsafe t = t
+  let to_signal t = t
+  let sample = sample
+  let never = never
+  let debug_print_sample_index_on_true = debug_print_sample_index_on_true
+end
+
+module Gate = struct
+  type nonrec t = bool t
+
+  let of_signal t = t
+  let to_signal t = t
+  let to_trigger t = Trigger.rising_edge t
+  let sample = sample
+  let debug_print_sample_index_on_true = debug_print_sample_index_on_true
+end
+
+let gate = Gate.of_signal

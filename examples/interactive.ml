@@ -4,7 +4,9 @@ open Dsl
 
 let mk_voice gate freq_hz effect_clock =
   let sah_noise = sample_and_hold (noise_01 ()) effect_clock in
-  let lfo = low_frequency_oscillator (const Sine) (const 0.2) (trigger gate) in
+  let lfo =
+    low_frequency_oscillator (const Sine) (const 0.2) (Gate.to_trigger gate)
+  in
   let freq_signal = const freq_hz in
   let osc =
     mean
@@ -35,7 +37,7 @@ let mk_voice gate freq_hz effect_clock =
   lazy_amplifier filtered_osc ~volume:amp_env
   |> map ~f:(fun x -> Float.clamp_sym ~mag:2.0 (x *. 10.0))
 
-let mk_voices (keys : bool Signal.t Input.All_keyboard.t) =
+let mk_voices (keys : _ Input.All_keyboard.t) =
   let effect_clock = clock_of_frequency_hz (const 8.0) in
   Keyboard_helper.voices ~keys ~mid_note:(`C, 4)
   |> List.map ~f:(fun { Keyboard_helper.Voice.frequency_hz; gate } ->
@@ -46,7 +48,7 @@ let mk_voices (keys : bool Signal.t Input.All_keyboard.t) =
    sounds to come out of the filter controlled by the mouse *)
 let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
 
-let mk_synth (input : (bool Signal.t, float Signal.t) Input.t) =
+let mk_synth (input : (_, _) Input.t) =
   let mouse_x = mouse_filter input.mouse.mouse_x in
   let mouse_y = mouse_filter input.mouse.mouse_y in
   let echo_effect signal = signal |> scale 0.6 in

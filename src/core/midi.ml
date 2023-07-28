@@ -26,7 +26,7 @@ let pitch_wheel_to_pitch_multiplier =
 module Midi_sequencer = struct
   type voice = {
     frequency_hz : float Signal.t;
-    gate : bool Signal.t;
+    gate : Signal.Gate.t;
     velocity : int Signal.t;
   }
 
@@ -129,6 +129,7 @@ module Midi_sequencer = struct
             Signal.map signal_to_update_state ~f:(fun () ->
                 let { gate; _ } = Array.get voices i in
                 gate)
+            |> Signal.gate
           in
           let velocity =
             Signal.map signal_to_update_state ~f:(fun () ->
@@ -147,7 +148,7 @@ let track_signal (track : Track.t) clock =
   let next_time = ref 0 in
   Signal.of_raw (fun ctx ->
       if !current_index >= Array.length event_array then []
-      else if Signal.sample clock ctx then (
+      else if Signal.Trigger.sample clock ctx then (
         let current_time = !next_time in
         next_time := current_time + 1;
         let next_event = Array.get event_array !current_index in

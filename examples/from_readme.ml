@@ -11,11 +11,12 @@ open Dsl
    to a 440Hz sine wave. *)
 let osc : float Signal.t = oscillator (const Sine) (const 440.0)
 
-(* [note_clock] represents a signal whose value is either [true] or [false]
+(* [note_gate] represents a signal whose value is either [true] or [false]
    which changes from [false] to [true] twice per second, and spends 30% of the
    time on. This is often used to communicate the fact that a key is pressed to
-   a module that responds to such events. *)
-let note_clock : bool Signal.t =
+   a module that responds to such events. The [Signal.Gate.t] type is a wrapper
+   of [bool t]. *)
+let note_gate : Signal.Gate.t =
   periodic_gate ~frequency_hz:(const 2.0) ~duty_01:(const 0.3)
 
 (* [envelope] is a signal which is 0 while its [gate] argument is producing
@@ -26,7 +27,7 @@ let note_clock : bool Signal.t =
    is typically used to modulate a signal in response to a key press, which we
    are simulating here with [note_clock]. *)
 let envelope : float Signal.t =
-  ar_linear ~gate:note_clock ~attack_s:(const 0.01) ~release_s:(const 0.2)
+  ar_linear ~gate:note_gate ~attack_s:(const 0.01) ~release_s:(const 0.2)
 
 (* Multiply the oscillator with the envelope to produce a repeating
    burst of volume which gradually tapers off twice per second. *)

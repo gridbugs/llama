@@ -36,7 +36,7 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
    sounds to come out of the filter controlled by the mouse *)
 let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
 
-let signal (input : (bool Signal.t, float Signal.t) Input.t) midi_sequencer =
+let signal (input : (_, _) Input.t) midi_sequencer =
   let { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table } =
     midi_sequencer
   in

@@ -13,7 +13,7 @@ end
 module Midi_sequencer : sig
   type voice = {
     frequency_hz : float Signal.t;
-    gate : bool Signal.t;
+    gate : Signal.Gate.t;
     velocity : int Signal.t;
   }
 
@@ -26,4 +26,4 @@ module Midi_sequencer : sig
   val signal : channel:int -> polyphony:int -> Event.t list Signal.t -> output
 end
 
-val track_signal : Track.t -> bool Signal.t -> Event.t list Signal.t
+val track_signal : Track.t -> Signal.Trigger.t -> Event.t list Signal.t

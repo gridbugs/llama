@@ -8,7 +8,7 @@ open Dsl
 type event = { note : Music.Note.t; timestamp : int; duration : int }
 
 module Event_player_polyphonic = struct
-  type t = { num_voices : int; events : event list; clock : bool Signal.t }
+  type t = { num_voices : int; events : event list; clock : Signal.Trigger.t }
   type voice_state = { release_time : int; current_frequency_hz : float }
 
   type state = {
@@ -35,7 +35,7 @@ module Event_player_polyphonic = struct
         if n == 0 then value :: xs else x :: list_set_nth xs (n - 1) value
     | [] -> failwith "index out of bounds"
 
-  type output = { frequency_hz : float Signal.t; gate : bool Signal.t }
+  type output = { frequency_hz : float Signal.t; gate : Signal.Gate.t }
 
   let signal t =
     let events_sorted_by_timestamp =
@@ -44,7 +44,7 @@ module Event_player_polyphonic = struct
     in
     let combined =
       Raw.with_state ~init:(init_state t.num_voices) ~f:(fun state ctx ->
-          if Signal.sample t.clock ctx then
+          if Signal.Trigger.sample t.clock ctx then
             let rec loop state =
               if
                 state.next_array_index < Array.length events_sorted_by_timestamp
@@ -83,7 +83,9 @@ module Event_player_polyphonic = struct
     List.init ~len:t.num_voices ~f:(fun i ->
         {
           frequency_hz = Signal.map combined ~f:(fun xs -> List.nth xs i |> fst);
-          gate = Signal.map combined ~f:(fun xs -> List.nth xs i |> snd);
+          gate =
+            Signal.map combined ~f:(fun xs -> List.nth xs i |> snd)
+            |> Signal.gate;
         })
 end
 

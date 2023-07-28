@@ -7,28 +7,29 @@ module Oscillator : sig
     waveform : waveform Signal.t;
     frequency_hz : float Signal.t;
     pulse_width_01 : float Signal.t;
-    reset_trigger : bool Signal.t;
+    reset_trigger : Signal.Trigger.t;
     reset_offset_01 : float Signal.t;
   }
 
   val signal : t -> float Signal.t
 end
 
+(** A trigger signal that is true at regular intervals *)
 module Clock : sig
   type t = { frequency_hz : float Signal.t }
 
-  val signal : t -> bool Signal.t
+  val trigger : t -> Signal.Trigger.t
 end
 
 module Clock_divider : sig
-  type t = { clock : bool Signal.t; denominator : int }
+  type t = { clock : Signal.Trigger.t; denominator : int }
 
-  val signal : t -> bool Signal.t
+  val trigger : t -> Signal.Trigger.t
 end
 
 module Ar_linear : sig
   type t = {
-    gate : bool Signal.t;
+    gate : Signal.Gate.t;
     attack_s : float Signal.t;
     release_s : float Signal.t;
   }
@@ -38,7 +39,7 @@ end
 
 module Adsr_linear : sig
   type t = {
-    gate : bool Signal.t;
+    gate : Signal.Gate.t;
     attack_s : float Signal.t;
     decay_s : float Signal.t;
     sustain_01 : float Signal.t;
@@ -49,20 +50,20 @@ module Adsr_linear : sig
 end
 
 module Sequencer : sig
-  type 'a output = { value : 'a Signal.t; gate : bool Signal.t }
+  type 'a output = { value : 'a Signal.t; gate : Signal.Gate.t }
   type 'a step = { value : 'a Signal.t; period_s : float Signal.t }
 end
 
 module Sustained_step_sequencer : sig
   type step = float Sequencer.step
-  type t = { sequence : step option list; clock : bool Signal.t }
+  type t = { sequence : step option list; clock : Signal.Trigger.t }
 
   val signal : t -> float Sequencer.output
 end
 
 module Generic_step_sequencer : sig
   type 'a step = 'a Sequencer.step
-  type 'a t = { sequence : 'a step list; clock : bool Signal.t }
+  type 'a t = { sequence : 'a step list; clock : Signal.Trigger.t }
 
   val signal : 'a t -> 'a Sequencer.output
 end
@@ -71,7 +72,7 @@ module Random_sequencer : sig
   type 'a t = {
     values : 'a Signal.t list;
     period : float Signal.t;
-    clock : bool Signal.t;
+    clock : Signal.Trigger.t;
   }
 
   val signal : 'a t -> 'a Sequencer.output
@@ -99,13 +100,13 @@ module Chebyshev_filter : sig
 end
 
 module Sample_and_hold : sig
-  type t = { signal : float Signal.t; trigger : bool Signal.t }
+  type t = { signal : float Signal.t; trigger : Signal.Trigger.t }
 
   val signal : t -> float Signal.t
 end
 
 module Sample_player_mono : sig
-  type t = { data : floatarray; trigger : bool Signal.t }
+  type t = { data : floatarray; trigger : Signal.Trigger.t }
 
   val signal : t -> float Signal.t
 end
@@ -114,10 +115,10 @@ module Bitwise_trigger_sequencer : sig
   type t = {
     num_channels : int;
     sequence : int Signal.t list;
-    clock : bool Signal.t;
+    clock : Signal.Trigger.t;
   }
 
-  val signals : t -> bool Signal.t list
+  val triggers : t -> Signal.Trigger.t list
 end
 
 module Delay : sig

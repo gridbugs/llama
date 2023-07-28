@@ -30,4 +30,4 @@ val visualize :
   float Llama.Signal.t ->
   float Llama.Signal.t
 
-val input_signals : t -> (bool Llama.Signal.t, float Llama.Signal.t) Input.t
+val input_signals : t -> (Llama.Signal.Gate.t, float Llama.Signal.t) Input.t

@@ -16,7 +16,7 @@ module Oscillator = struct
     waveform : waveform Signal.t;
     frequency_hz : float Signal.t;
     pulse_width_01 : float Signal.t;
-    reset_trigger : bool Signal.t;
+    reset_trigger : Signal.Trigger.t;
     reset_offset_01 : float Signal.t;
   }
 
@@ -26,7 +26,7 @@ module Oscillator = struct
           match state with
           | None -> Signal.sample t.reset_offset_01 ctx
           | Some state ->
-              if Signal.sample t.reset_trigger ctx then
+              if Signal.Trigger.sample t.reset_trigger ctx then
                 Signal.sample t.reset_offset_01 ctx
               else state
         in
@@ -58,7 +58,7 @@ module Clock = struct
      stick with a single randomly-chosen value for an entire frame. *)
   type state = { step_size_this_tick : float; oscilator_value_01 : float }
 
-  let signal t =
+  let trigger t =
     Raw.with_state' ~init:None ~f:(fun state ctx ->
         let state =
           match state with
@@ -86,23 +86,24 @@ module Clock = struct
           else state
         in
         (Some state, state.oscilator_value_01 < 0.5))
-    |> Signal.of_raw |> Signal.trigger ~init:true
+    |> Signal.of_raw
+    |> Signal.Trigger.rising_edge ~init:true
 end
 
 module Clock_divider = struct
-  type t = { clock : bool Signal.t; denominator : int }
+  type t = { clock : Signal.Trigger.t; denominator : int }
 
-  let signal t =
+  let trigger t =
     Raw.with_state' ~init:0 ~f:(fun state ctx ->
-        if Signal.sample t.clock ctx then
+        if Signal.Trigger.sample t.clock ctx then
           if state > 0 then (state - 1, false) else (t.denominator - 1, true)
         else (state, false))
-    |> Signal.of_raw
+    |> Signal.of_raw |> Signal.Trigger.of_signal_unsafe
 end
 
 module Ar_linear = struct
   type t = {
-    gate : bool Signal.t;
+    gate : Signal.Gate.t;
     attack_s : float Signal.t;
     release_s : float Signal.t;
   }
@@ -110,7 +111,7 @@ module Ar_linear = struct
   let signal t =
     Raw.with_state ~init:0.0 ~f:(fun state ctx ->
         let delta =
-          if Signal.sample t.gate ctx then
+          if Signal.Gate.sample t.gate ctx then
             1.0 /. (Signal.sample t.attack_s ctx *. ctx.sample_rate_hz)
           else -1.0 /. (Signal.sample t.release_s ctx *. ctx.sample_rate_hz)
         in
@@ -120,7 +121,7 @@ end
 
 module Adsr_linear = struct
   type t = {
-    gate : bool Signal.t;
+    gate : Signal.Gate.t;
     attack_s : float Signal.t;
     decay_s : float Signal.t;
     sustain_01 : float Signal.t;
@@ -133,7 +134,7 @@ module Adsr_linear = struct
     Raw.with_state' ~init:{ current_value = 0.0; crossed_threshold = false }
       ~f:(fun state ctx ->
         let state =
-          if Signal.sample t.gate ctx then
+          if Signal.Gate.sample t.gate ctx then
             if state.crossed_threshold then
               (* decay and sustain *)
               let decay_s = Signal.sample t.decay_s ctx in
@@ -166,13 +167,13 @@ module Adsr_linear = struct
 end
 
 module Sequencer = struct
-  type 'a output = { value : 'a Signal.t; gate : bool Signal.t }
+  type 'a output = { value : 'a Signal.t; gate : Signal.Gate.t }
   type 'a step = { value : 'a Signal.t; period_s : float Signal.t }
 end
 
 module Sustained_step_sequencer = struct
   type step = float Sequencer.step
-  type t = { sequence : step option list; clock : bool Signal.t }
+  type t = { sequence : step option list; clock : Signal.Trigger.t }
 
   type state = {
     step_index : int;
@@ -188,7 +189,7 @@ module Sustained_step_sequencer = struct
       Raw.with_state' ~init:init_state ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
           let state =
-            if Signal.sample t.clock ctx then
+            if Signal.Trigger.sample t.clock ctx then
               let step_index =
                 (state.step_index + 1) mod Array.length sequence_array
               in
@@ -215,13 +216,13 @@ module Sustained_step_sequencer = struct
     in
     {
       Sequencer.value = Signal.map combined ~f:fst;
-      gate = Signal.map combined ~f:snd;
+      gate = Signal.map combined ~f:snd |> Signal.gate;
     }
 end
 
 module Generic_step_sequencer = struct
   type 'a step = 'a Sequencer.step
-  type 'a t = { sequence : 'a step list; clock : bool Signal.t }
+  type 'a t = { sequence : 'a step list; clock : Signal.Trigger.t }
   type state = { step_index : int; gate_remain_s : float }
 
   let init_state = { step_index = 0; gate_remain_s = 0.0 }
@@ -232,7 +233,7 @@ module Generic_step_sequencer = struct
       Raw.with_state' ~init:init_state ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
           let state, current_step =
-            if Signal.sample t.clock ctx then
+            if Signal.Trigger.sample t.clock ctx then
               let step_index =
                 (state.step_index + 1) mod Array.length sequence_array
               in
@@ -257,7 +258,7 @@ module Generic_step_sequencer = struct
     in
     {
       Sequencer.value = Signal.map combined ~f:fst;
-      gate = Signal.map combined ~f:snd;
+      gate = Signal.map combined ~f:snd |> Signal.gate;
     }
 end
 
@@ -265,7 +266,7 @@ module Random_sequencer = struct
   type 'a t = {
     values : 'a Signal.t list;
     period : float Signal.t;
-    clock : bool Signal.t;
+    clock : Signal.Trigger.t;
   }
 
   type state = { gate_remain_s : float; current_index : int }
@@ -279,7 +280,7 @@ module Random_sequencer = struct
         ~f:(fun state ctx ->
           let gate_remain_s_delta = 1.0 /. ctx.sample_rate_hz in
           let state =
-            if Signal.sample t.clock ctx then
+            if Signal.Trigger.sample t.clock ctx then
               let current_index = choose_index () in
               let gate_remain_s =
                 Signal.sample t.period ctx -. gate_remain_s_delta
@@ -298,7 +299,7 @@ module Random_sequencer = struct
     in
     {
       Sequencer.value = Signal.map combined ~f:fst;
-      gate = Signal.map combined ~f:snd;
+      gate = Signal.map combined ~f:snd |> Signal.gate;
     }
 end
 
@@ -324,21 +325,21 @@ module Chebyshev_filter = struct
 end
 
 module Sample_and_hold = struct
-  type t = { signal : float Signal.t; trigger : bool Signal.t }
+  type t = { signal : float Signal.t; trigger : Signal.Trigger.t }
 
   let signal t =
     Raw.with_state ~init:0.0 ~f:(fun state ctx ->
-        if Signal.sample t.trigger ctx then Signal.sample t.signal ctx
+        if Signal.Trigger.sample t.trigger ctx then Signal.sample t.signal ctx
         else state)
     |> Signal.of_raw
 end
 
 module Sample_player_mono = struct
-  type t = { data : floatarray; trigger : bool Signal.t }
+  type t = { data : floatarray; trigger : Signal.Trigger.t }
 
   let signal t =
     Raw.with_state' ~init:(Float.Array.length t.data) ~f:(fun index ctx ->
-        if Signal.sample t.trigger ctx then (0, 0.0)
+        if Signal.Trigger.sample t.trigger ctx then (0, 0.0)
         else
           (* deliberately allow index to be 1 out of bounds to indicate that the sample is finished *)
           let sample =
@@ -355,16 +356,16 @@ module Bitwise_trigger_sequencer = struct
   type t = {
     num_channels : int;
     sequence : int Signal.t list;
-    clock : bool Signal.t;
+    clock : Signal.Trigger.t;
   }
 
-  let signals t =
+  let triggers t =
     let sequence_array = Array.of_list t.sequence in
     let bitfield_signal =
       Raw.with_state'
         ~init:(Array.length sequence_array - 1)
         ~f:(fun index ctx ->
-          if Signal.sample t.clock ctx then
+          if Signal.Trigger.sample t.clock ctx then
             let index = (index + 1) mod Array.length sequence_array in
             let signal = Array.get sequence_array index in
             let output_bits = Signal.sample signal ctx in
@@ -374,7 +375,8 @@ module Bitwise_trigger_sequencer = struct
     in
     List.init ~len:t.num_channels ~f:(fun i ->
         Signal.map bitfield_signal ~f:(fun bits ->
-            not (Int.equal (bits land (1 lsl i)) 0)))
+            not (Int.equal (bits land (1 lsl i)) 0))
+        |> Signal.Trigger.of_signal_unsafe)
 end
 
 module Delay = struct

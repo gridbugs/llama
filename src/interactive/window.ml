@@ -170,7 +170,9 @@ end
 let create_inputs () =
   let open Input in
   let keyboard = All_keyboard.init ~f:(fun () -> Signal.var false) in
-  let keyboard_signals = All_keyboard.map keyboard ~f:fst in
+  let keyboard_signals =
+    All_keyboard.map keyboard ~f:(fun (key, _) -> Signal.Gate.of_signal key)
+  in
   let keyboard_refs = All_keyboard.map keyboard ~f:snd in
   let mouse = Mouse_pos.init ~f:(fun () -> Signal.var 0.0) in
   let mouse_signals = Mouse_pos.map mouse ~f:fst in
@@ -231,7 +233,7 @@ type t = {
   fps : float;
   background_rgba_01 : Types.rgba_01;
   visualization : Visualization.t option ref;
-  input_signals : (bool Signal.t, float Signal.t) Input.t;
+  input_signals : (Signal.Gate.t, float Signal.t) Input.t;
   input_refs : (bool ref, float ref) Input.t;
 }
 

@@ -14,7 +14,7 @@ let oscillator ?(pulse_width_01 = const 0.5) waveform frequency_hz =
         frequency_hz;
         pulse_width_01;
         reset_offset_01 = const 0.0;
-        reset_trigger = const false;
+        reset_trigger = Signal.Trigger.never;
       })
 
 let noise_01 () = oscillator (const Noise) (const 0.0) |> to_01
@@ -35,11 +35,11 @@ let low_frequency_oscillator_01 ?(pulse_width_01 = const 0.5)
     frequency_hz reset_trigger
   |> to_01
 
-let clock_of_frequency_hz frequency_hz = Clock.(signal { frequency_hz })
+let clock_of_frequency_hz frequency_hz = Clock.(trigger { frequency_hz })
 let clock_of_period_s period_s = clock_of_frequency_hz (recip period_s)
 
 let clock_divide denominator clock =
-  Clock_divider.(signal { clock; denominator })
+  Clock_divider.(trigger { clock; denominator })
 
 let ar_linear ~gate ~attack_s ~release_s =
   Ar_linear.(signal { gate; attack_s; release_s })
@@ -49,7 +49,7 @@ let adsr_linear ~gate ~attack_s ~decay_s ~sustain_01 ~release_s =
 
 type 'a sequencer_output = 'a Sequencer.output = {
   value : 'a Signal.t;
-  gate : bool Signal.t;
+  gate : Signal.Gate.t;
 }
 
 type 'a sequencer_step = 'a Sequencer.step = {
@@ -103,16 +103,19 @@ let sample_player_mono data trigger =
   Sample_player_mono.(signal { data; trigger })
 
 let bitwise_trigger_sequencer num_channels sequence clock =
-  Bitwise_trigger_sequencer.(signals { num_channels; sequence; clock })
+  Bitwise_trigger_sequencer.(triggers { num_channels; sequence; clock })
 
 let delay signal_ ~time_s ~fill =
   Delay.(signal { signal = signal_; time_s; fill })
 
-let clock_delay time_s clock = delay clock ~time_s:(const time_s) ~fill:false
+let clock_delay time_s clock =
+  delay (Signal.Trigger.to_signal clock) ~time_s:(const time_s) ~fill:false
+  |> Signal.Trigger.of_signal_unsafe
 
 let periodic_gate ~frequency_hz ~duty_01 =
   oscillator ~pulse_width_01:duty_01 (const Pulse) frequency_hz
   |> map ~f:(fun x -> x < 0.0)
+  |> Signal.Gate.of_signal
 
 let feedback ~f =
   let previous_output_signal, previous_output_ref = var 0.0 in

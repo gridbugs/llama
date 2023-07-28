@@ -2,7 +2,7 @@ open StdLabels
 open Llama_interactive
 
 module Voice = struct
-  type t = { frequency_hz : float; gate : bool Signal.t }
+  type t = { frequency_hz : float; gate : Signal.Gate.t }
 end
 
 let voices_for_key_row ~key_gates_in_order ~note_for_second_key =
@@ -12,7 +12,7 @@ let voices_for_key_row ~key_gates_in_order ~note_for_second_key =
       let frequency_hz = Music.frequency_hz_of_midi_index midi_index in
       { Voice.frequency_hz; gate })
 
-let voices ~(keys : bool Signal.t Input.All_keyboard.t)
+let voices ~(keys : Signal.Gate.t Input.All_keyboard.t)
     ~mid_note:(note_name, octave_index) =
   let top_row =
     [

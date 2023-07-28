@@ -1,5 +1,7 @@
 ## 0.0.2 (unreleased)
 
+- Add `saturation` operator
+- Add `map2` and `map3` combinators
 - Add missing `downsample` argument to visualized signal players
 - Stop exporting labelled stdlib modules
 - Add tests in new package

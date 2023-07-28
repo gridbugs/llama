@@ -200,7 +200,7 @@ let () =
             ~main_sequencer ~pad_gates ~wav_players ~echo_effect
         in
         let viz'd_signal =
-          visualize ~stable:true ~stride:4 ~pixel_scale:6 ~sample_scale:0.4
+          visualize ~stable:true ~stride:1 ~pixel_scale:1 ~sample_scale:0.4
             ~sample_to_rgba_01:(Fun.const (0.0, 0.5, 0.0, 1.0))
             window signal
         in

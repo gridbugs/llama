@@ -14,6 +14,8 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 4.14.1
+        opam-pin: false
+        opam-depext: false
     - uses: actions/checkout@v3
     - run: opam switch create . --no-install
     - run: opam install -y dune ocamlformat

@@ -15,6 +15,7 @@ jobs:
       with:
         ocaml-compiler: 4.14.1
     - uses: actions/checkout@v3
+    - run: opam switch create . --no-install
     - run: opam install -y dune ocamlformat
     - run: opam exec -- dune fmt
 

@@ -99,3 +99,4 @@ val echo : f:(float t -> float t) -> delay_s:float t -> float t -> float t
     after a delay of [delay_s] seconds. *)
 
 val lazy_amplifier : float t -> volume:float t -> float t
+val saturate : float t -> boost:float t -> threshold:float t -> float t

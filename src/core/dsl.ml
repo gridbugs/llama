@@ -134,3 +134,7 @@ let echo ~f ~delay_s =
 
 let lazy_amplifier signal_ ~volume =
   Lazy_amplifier.(signal { signal = signal_; volume })
+
+let saturate signal_ ~boost ~threshold =
+  map3 signal_ boost threshold ~f:(fun x boost threshold ->
+      x *. boost |> Float.clamp_sym ~mag:threshold)

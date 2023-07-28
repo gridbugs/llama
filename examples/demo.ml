@@ -23,6 +23,7 @@ let signal =
        ~cutoff_hz:((const 1.0 -.. preset) *.. const 5000.0)
   |> map ~f:(fun x -> x *. 2.0 |> Float.clamp_sym ~mag:1.0)
   |> echo ~f:(scale 0.5) ~delay_s:(const 0.4)
+  |> saturate ~boost:(const 2.0) ~threshold:(const 1.0)
 
 let () =
   with_window (fun window ->

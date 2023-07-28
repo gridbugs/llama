@@ -33,18 +33,18 @@ module Visualization_style = struct
 end
 
 module Sample_buffer = struct
-  type t = { samples : float array; mutable next_i : int }
+  type t = { samples : floatarray; mutable next_i : int }
 
   let create size =
-    let samples = Array.init size ~f:(Fun.const 0.0) in
+    let samples = Float.Array.init size (Fun.const 0.0) in
     { samples; next_i = 0 }
 
   let length t = t.next_i
-  let is_full t = t.next_i == Array.length t.samples
+  let is_full t = t.next_i == Float.Array.length t.samples
 
   let append_unless_full t sample =
     if not (is_full t) then (
-      Array.set t.samples t.next_i sample;
+      Float.Array.set t.samples t.next_i sample;
       t.next_i <- t.next_i + 1)
 
   let clear t = t.next_i <- 0
@@ -53,8 +53,8 @@ module Sample_buffer = struct
     let rec loop i =
       if i >= t.next_i then None
       else
-        let prev = Array.get t.samples (i - 1) in
-        let current = Array.get t.samples i in
+        let prev = Float.Array.get t.samples (i - 1) in
+        let current = Float.Array.get t.samples i in
         if prev <= 0.0 && current >= 0.0 then Some i else loop (i + 1)
     in
     loop 1
@@ -63,7 +63,7 @@ module Sample_buffer = struct
     let rec loop i count =
       if i >= t.next_i || count >= max_iterations then ()
       else (
-        f count (Array.get t.samples i);
+        f count (Float.Array.get t.samples i);
         loop (i + stride) (count + 1))
     in
     loop offset 0

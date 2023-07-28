@@ -16,9 +16,9 @@ module Wav = struct
   let read_wav_file_mono_exn path =
     (* TODO: This array can't be indexed with [Array.get] but values can be
        obtained with (say) [Array.iter]. This is possibly a bug in the ocaml
-       rust bindings for the [float array] special case. *)
+       rust bindings for the [floatarray] special case. *)
     let broken_array = read_wav_file_mono_exn_raw path in
-    Array.of_list (Array.to_list broken_array)
+    Float.Array.of_seq (Array.to_seq broken_array)
 end
 
 module Output_stream = struct

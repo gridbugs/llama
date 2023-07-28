@@ -3,7 +3,7 @@ module System : sig
 end
 
 module Wav : sig
-  val read_wav_file_mono_exn : string -> float array
+  val read_wav_file_mono_exn : string -> floatarray
 end
 
 module Output_stream : sig

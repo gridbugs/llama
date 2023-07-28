@@ -334,17 +334,19 @@ module Sample_and_hold = struct
 end
 
 module Sample_player_mono = struct
-  type t = { data : float array; trigger : bool Signal.t }
+  type t = { data : floatarray; trigger : bool Signal.t }
 
   let signal t =
-    Raw.with_state' ~init:(Array.length t.data) ~f:(fun index ctx ->
+    Raw.with_state' ~init:(Float.Array.length t.data) ~f:(fun index ctx ->
         if Signal.sample t.trigger ctx then (0, 0.0)
         else
           (* deliberately allow index to be 1 out of bounds to indicate that the sample is finished *)
           let sample =
-            if index < Array.length t.data then Array.get t.data index else 0.0
+            if index < Float.Array.length t.data then
+              Float.Array.get t.data index
+            else 0.0
           in
-          let index = Int.min (index + 1) (Array.length t.data) in
+          let index = Int.min (index + 1) (Float.Array.length t.data) in
           (index, sample))
     |> Signal.of_raw
 end

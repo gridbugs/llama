@@ -2,8 +2,6 @@ open StdLabels
 open Llama_interactive
 open Dsl
 
-let _pretend_key = pulse ~frequency_hz:(const 2.0) ~duty_01:(const 0.1)
-
 let mk_voice frequency gate =
   let envelope =
     ar_linear ~gate ~attack_s:(const 0.05) ~release_s:(const 0.2) |> exp_01 1.0

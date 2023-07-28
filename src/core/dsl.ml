@@ -118,7 +118,7 @@ let delay signal_ ~time_s ~fill =
 
 let clock_delay time_s clock = delay clock ~time_s:(const time_s) ~fill:false
 
-let pulse ~frequency_hz ~duty_01 =
+let periodic_gate ~frequency_hz ~duty_01 =
   oscillator ~square_wave_pulse_width_01:duty_01 (const Square) frequency_hz
   |> map ~f:(fun x -> x < 0.0)
 

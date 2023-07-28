@@ -4,7 +4,7 @@ open Llama
 open Dsl
 
 let osc = oscillator (const Saw) (const 80.0)
-let note_clock = pulse ~frequency_hz:(const 4.0) ~duty_01:(const 0.5)
+let note_clock = periodic_gate ~frequency_hz:(const 4.0) ~duty_01:(const 0.5)
 
 let envelope =
   ar_linear ~gate:note_clock ~attack_s:(const 0.2) ~release_s:(const 0.2)

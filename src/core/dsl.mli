@@ -92,7 +92,7 @@ val sample_player_mono : float array -> bool t -> float t
 val bitwise_trigger_sequencer : int -> int t list -> bool t -> bool t list
 val delay : 'a t -> time_s:float t -> fill:'a -> 'a t
 val clock_delay : float -> bool t -> bool t
-val pulse : frequency_hz:float t -> duty_01:float t -> bool t
+val periodic_gate : frequency_hz:float t -> duty_01:float t -> bool t
 
 val feedback : f:(float t -> float t) -> float t -> float t
 (** [feedback ~f s] adds its previous output modifier by [f] to its input. *)

@@ -27,8 +27,6 @@ module Signal_player = Signal_player
 module Signal = Signal
 module Float = Float
 module Music = Music
-module List = List
-module Array = Array
 
 module Midi : sig
   include module type of struct

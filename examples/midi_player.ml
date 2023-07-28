@@ -1,3 +1,4 @@
+open StdLabels
 open Llama_interactive
 open Llama.Midi
 open Dsl

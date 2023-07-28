@@ -1,3 +1,4 @@
+open StdLabels
 module Ctx = Signal.Ctx
 module Raw = Signal.Raw
 

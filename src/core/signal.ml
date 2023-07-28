@@ -1,3 +1,5 @@
+open StdLabels
+
 module Ctx = struct
   type t = { sample_index : int; sample_rate_hz : float }
 end

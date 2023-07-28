@@ -6,6 +6,7 @@
    E.g.:  dune exec ./examples/random_pentatonic.exe -- cymbal.wav snare.wav bass.wav
 *)
 
+open StdLabels
 open Llama
 open Dsl
 

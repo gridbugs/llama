@@ -1,5 +1,6 @@
 (* Example of applying the [echo] effect *)
 
+open StdLabels
 open Llama
 open Dsl
 

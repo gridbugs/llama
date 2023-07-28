@@ -1,6 +1,7 @@
 (* Example which implements a polyphonic synthesizer for playing events in a
    custom format *)
 
+open StdLabels
 open Llama
 open Dsl
 

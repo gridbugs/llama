@@ -1,3 +1,4 @@
+open StdLabels
 include Llama_midi
 
 module Controller_table = struct

@@ -1,4 +1,5 @@
-open! Modules
+open StdLabels
+open Modules
 include Signal
 
 type waveform = Oscillator.waveform = Sine | Saw | Triangle | Square | Noise

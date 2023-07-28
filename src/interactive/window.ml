@@ -1,7 +1,7 @@
 open Tsdl
+open StdLabels
 module Signal = Llama.Signal
 module Ctx = Signal.Ctx
-module List = Llama.List
 
 module Global = struct
   let initialized = ref false
@@ -36,7 +36,7 @@ module Sample_buffer = struct
   type t = { samples : float array; mutable next_i : int }
 
   let create size =
-    let samples = Array.init size (Fun.const 0.0) in
+    let samples = Array.init size ~f:(Fun.const 0.0) in
     { samples; next_i = 0 }
 
   let length t = t.next_i

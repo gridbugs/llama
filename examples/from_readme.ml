@@ -15,7 +15,7 @@ let osc : float Signal.t = oscillator (const Sine) (const 440.0)
    which changes from [false] to [true] twice per second, and spends 30% of the
    time on. This is often used to communicate the fact that a key is pressed to
    a module that responds to such events. The [Signal.Gate.t] type is a wrapper
-   of [bool t]. *)
+   of [bool Signal.t]. *)
 let note_gate : Signal.Gate.t =
   periodic_gate ~frequency_hz:(const 2.0) ~duty_01:(const 0.3)
 

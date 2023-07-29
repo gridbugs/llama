@@ -1,4 +1,4 @@
-## 0.0.2 (unreleased)
+## 0.1.0
 
 - Introduce `Signal.Gate.t` and `Signal.Trigger.t` wrappers of `bool Signal.t`
 - Rename `clock` constructor to `clock_of_frequency_hz`

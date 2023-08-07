@@ -294,13 +294,11 @@ module System_message = struct
     sprintf "((manufacturer_id %d) (payload (%s)))" manufacturer_id
       (String.concat " " (List.map string_of_int payload))
 
-  let system_exclusive_end = 0b11110111
-
   let system_exclusive_parse =
     let open Byte_array_parser in
     let rec loop acc =
       let* byte = byte in
-      if byte == system_exclusive_end then return acc
+      if byte == Low_level.Message.system_exclusive_end then return acc
       else if byte land (1 lsl 7) <> 0 then
         raise
           (Parse_exception
@@ -379,7 +377,9 @@ module System_message = struct
     | System_exclusive { manufacturer_id; payload } ->
         assert (0 <= manufacturer_id && manufacturer_id < 127);
         let bytes =
-          Bytes.make (List.length payload + 1) (Char.chr system_exclusive_end)
+          Bytes.make
+            (List.length payload + 1)
+            (Char.chr Low_level.Message.system_exclusive_end)
         in
         List.iteri
           (fun i x ->
@@ -473,6 +473,15 @@ module Message = struct
       else
         let+ channel_voice_message = Channel_voice_message.parse status in
         Channel_voice_message channel_voice_message
+
+  let parse_including_status =
+    let open Byte_array_parser in
+    let* status = byte in
+    if not (Low_level.Message.is_status_byte status) then
+      raise (Parse_exception "Message does not begin with status byte");
+    parse status
+
+  let parse_from_char_array = Byte_array_parser.run parse_including_status
 
   let encode ~running_status = function
     | Channel_voice_message m -> Channel_voice_message.encode ~running_status m
@@ -651,6 +660,8 @@ module File_writer = struct
     List.iter (Track.write t.out) tracks;
     close_out t.out
 end
+
+module Low_level = Low_level
 
 module For_test = struct
   module Byte_array_parser = Byte_array_parser

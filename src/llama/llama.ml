@@ -1,3 +1,4 @@
+open StdLabels
 include Llama_core
 
 module Live = struct
@@ -42,7 +43,19 @@ module Midi = struct
              Midi.Event.parse_multi_from_char_array raw_data)))
     else Error `No_such_port
 
-  let live_midi_sequencer input ~port ~channel ~polyphony =
+  let live_midi_signal_messages input port =
     live_midi_signal input port
+    |> Result.map (fun event_signal ->
+           Signal.map event_signal
+             ~f:(List.map ~f:(fun (event : Event.t) -> event.message)))
+
+  let live_midi_sequencer input ~port ~channel ~polyphony =
+    live_midi_signal_messages input port
     |> Result.map (Midi_sequencer.signal ~channel ~polyphony)
+
+  let live_midi_messages_serial ~port ~baud =
+    let midi_serial = Midi_serial.create ~port ~baud in
+    Signal.of_raw (fun _ ->
+        Midi_serial.consume_all_available_bytes midi_serial;
+        Midi_serial.drain_messages midi_serial)
 end

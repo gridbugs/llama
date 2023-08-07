@@ -5,12 +5,7 @@ module Controller_table = struct
   type t = float Signal.t array
 
   let num_controllers = 128
-
-  let create () =
-    let refs = Array.init num_controllers ~f:(fun _ -> ref 0.0) in
-    let t = Array.map refs ~f:Signal.of_ref in
-    (t, refs)
-
+  let create_refs () = Array.init num_controllers ~f:(fun _ -> ref 0.0)
   let get_raw = Array.get
   let modulation t = get_raw t 1
   let volume t = get_raw t 7
@@ -46,14 +41,14 @@ module Midi_sequencer = struct
 
   type voice_state = { note : int; gate : bool; velocity : int }
 
-  let key_gates ~channel (track_signal : Event.t list Signal.t) =
+  let key_gates ~channel (messages : Message.t list Signal.t) =
     let ref_array = Array.init num_notes ~f:(fun _ -> ref false) in
     let update_signal =
       Signal.of_raw (fun ctx ->
           let voice_messages =
-            Signal.sample track_signal ctx
-            |> List.filter_map ~f:(fun (event : Event.t) ->
-                   match event.message with
+            Signal.sample messages ctx
+            |> List.filter_map ~f:(fun (message : Message.t) ->
+                   match message with
                    | Message.Channel_voice_message voice_message ->
                        if voice_message.channel == channel then
                          Some voice_message.message
@@ -71,7 +66,7 @@ module Midi_sequencer = struct
         Signal.map update_signal ~f:(fun _ -> !(Array.get ref_array i))
         |> Signal.gate)
 
-  let signal ~channel ~polyphony (track_signal : Event.t list Signal.t) =
+  let signal ~channel ~polyphony (messages : Message.t list Signal.t) =
     let voices =
       Array.init polyphony
         ~f:(Fun.const { note = 0; gate = false; velocity = 0 })
@@ -87,14 +82,14 @@ module Midi_sequencer = struct
     let currently_playing_voice_index_by_note =
       Array.init num_notes ~f:(Fun.const None)
     in
-    let controller_table, controller_refs = Controller_table.create () in
+    let controller_refs = Controller_table.create_refs () in
     let pitch_wheel_multiplier = ref 1.0 in
     let signal_to_update_state =
       Signal.of_raw (fun ctx ->
           let voice_messages =
-            Signal.sample track_signal ctx
-            |> List.filter_map ~f:(fun (event : Event.t) ->
-                   match event.message with
+            Signal.sample messages ctx
+            |> List.filter_map ~f:(fun (message : Message.t) ->
+                   match message with
                    | Message.Channel_voice_message voice_message ->
                        if voice_message.channel == channel then
                          Some voice_message.message
@@ -172,6 +167,10 @@ module Midi_sequencer = struct
           { frequency_hz; gate; velocity })
     in
     let pitch_wheel_multiplier = Signal.of_ref pitch_wheel_multiplier in
+    let controller_table =
+      Array.map controller_refs ~f:(fun controller_ref ->
+          Signal.map signal_to_update_state ~f:(fun () -> !controller_ref))
+    in
     { voices; pitch_wheel_multiplier; controller_table }
 end
 
@@ -201,3 +200,4 @@ let track_signal (track : Track.t) clock =
           List.rev (loop [ next_event ]))
         else [])
       else [])
+  |> Signal.map ~f:(List.map ~f:(fun (event : Event.t) -> event.message))

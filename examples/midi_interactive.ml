@@ -120,7 +120,7 @@ module Args = struct
   type t = {
     list_midi_ports : bool;
     echo_effect : bool;
-    print_events : bool;
+    print_messages : bool;
     midi_port : int;
     sample_paths : string list;
   }
@@ -128,7 +128,7 @@ module Args = struct
   let parse () =
     let list_midi_ports = ref false in
     let echo_effect = ref false in
-    let print_events = ref false in
+    let print_messages = ref false in
     let midi_port = ref 0 in
     let sample_paths = ref [] in
     Arg.parse
@@ -137,8 +137,8 @@ module Args = struct
           Arg.Set list_midi_ports,
           "List midi ports by index and exit" );
         ("--echo-effect", Arg.Set echo_effect, "Use echo effect");
-        ( "--print-events",
-          Arg.Set print_events,
+        ( "--print-messages",
+          Arg.Set print_messages,
           "Print each midi event to stdout" );
         ( "--midi-port",
           Arg.Set_int midi_port,
@@ -149,7 +149,7 @@ module Args = struct
     {
       list_midi_ports = !list_midi_ports;
       echo_effect = !echo_effect;
-      print_events = !print_events;
+      print_messages = !print_messages;
       midi_port = !midi_port;
       sample_paths = List.rev !sample_paths;
     }
@@ -159,7 +159,7 @@ let () =
   let {
     Args.list_midi_ports;
     echo_effect;
-    print_events;
+    print_messages;
     midi_port;
     sample_paths;
   } =
@@ -176,22 +176,22 @@ let () =
       ~f:(fun i name -> Printf.printf "%d: %s\n" i name)
       midi_port_names
   else
-    let midi_events =
-      Llama.Midi.live_midi_signal midi_input midi_port |> Result.get_ok
+    let midi_messages =
+      Llama.Midi.live_midi_signal_messages midi_input midi_port |> Result.get_ok
     in
-    let midi_events =
-      if print_events then
-        Signal.debug midi_events
+    let midi_messages =
+      if print_messages then
+        Signal.debug midi_messages
           ~f:
-            (List.iter ~f:(fun event ->
-                 print_endline (Midi.Event.to_string event)))
-      else midi_events
+            (List.iter ~f:(fun message ->
+                 print_endline (Midi.Message.to_string message)))
+      else midi_messages
     in
     let main_sequencer =
-      Llama.Midi.Midi_sequencer.signal midi_events ~channel:0 ~polyphony:12
+      Llama.Midi.Midi_sequencer.signal midi_messages ~channel:0 ~polyphony:12
     in
     let pad_gates =
-      Llama.Midi.Midi_sequencer.key_gates ~channel:9 midi_events
+      Llama.Midi.Midi_sequencer.key_gates ~channel:9 midi_messages
     in
     with_window ~background_rgba_01:(0.0, 0.05, 0.0, 1.0) (fun window ->
         let signal =

@@ -45,6 +45,10 @@ module Midi : sig
     Midi_input.t -> int -> (Event.t list Signal.t, [ `No_such_port ]) result
   (** Create a signal of lists of midi events that arrive on a given midi port in real time *)
 
+  val live_midi_signal_messages :
+    Midi_input.t -> int -> (Message.t list Signal.t, [ `No_such_port ]) result
+  (** Create a signal of lists of midi events that arrive on a given midi port in real time *)
+
   val live_midi_sequencer :
     Midi_input.t ->
     port:int ->
@@ -54,4 +58,7 @@ module Midi : sig
   (** Create a midi sequencer that processes midi events on a single midi
       channel from a given port. Use this for simple cases where you're only
       interested in events on a single channel. *)
+
+  val live_midi_messages_serial :
+    port:string -> baud:int -> Message.t list Signal.t
 end

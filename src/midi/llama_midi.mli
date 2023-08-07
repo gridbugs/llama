@@ -54,6 +54,7 @@ module Message : sig
     | Meta_event of Meta_event.t
 
   val to_string : t -> string
+  val parse_from_char_array : char array -> t
 end
 
 module Event : sig
@@ -107,6 +108,12 @@ module File_writer : sig
 
   val of_path : string -> t
   val write : t -> Data.t -> unit
+end
+
+module Low_level : sig
+  include module type of struct
+    include Low_level
+  end
 end
 
 module For_test : sig

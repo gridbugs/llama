@@ -29,11 +29,11 @@ module Midi_sequencer : sig
     controller_table : Controller_table.t;
   }
 
-  val key_gates : channel:int -> Event.t list Signal.t -> Gate_table.t
+  val key_gates : channel:int -> Message.t list Signal.t -> Gate_table.t
   (** Create a table of gate signals that arrive on a given channel, ignoring
       other information. *)
 
-  val signal : channel:int -> polyphony:int -> Event.t list Signal.t -> output
+  val signal : channel:int -> polyphony:int -> Message.t list Signal.t -> output
 end
 
-val track_signal : Track.t -> Signal.Trigger.t -> Event.t list Signal.t
+val track_signal : Track.t -> Signal.Trigger.t -> Message.t list Signal.t

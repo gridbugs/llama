@@ -23,6 +23,8 @@ let noise ~min ~max =
   both (noise_01 ()) (both max min)
   |> map ~f:(fun (noise, (max, min)) -> min +. (noise *. (max -. min)))
 
+let noise_1 () = noise ~min:(const (-1.0)) ~max:(const 1.0)
+
 let low_frequency_oscillator ?(pulse_width_01 = const 0.5)
     ?(reset_offset_01 = const 0.0) waveform frequency_hz reset_trigger =
   Oscillator.(

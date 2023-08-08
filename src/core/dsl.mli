@@ -9,6 +9,7 @@ type waveform = Sine | Saw | Triangle | Pulse | Noise
 val waveform_to_string : waveform -> string
 val oscillator : ?pulse_width_01:float t -> waveform t -> float t -> float t
 val noise_01 : unit -> float t
+val noise_1 : unit -> float t
 val noise : min:float t -> max:float t -> float t
 
 val low_frequency_oscillator :

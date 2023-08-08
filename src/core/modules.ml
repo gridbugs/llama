@@ -77,12 +77,14 @@ module Clock = struct
           }
         in
         let state =
-          if state.oscilator_value_01 >= 1.0 then
+          if state.oscilator_value_01 >= 1.0 then (
             let oscilator_value_01 = Float.rem state.oscilator_value_01 1.0 in
             let step_size_this_tick =
               Signal.sample t.frequency_hz ctx /. ctx.sample_rate_hz
             in
-            { oscilator_value_01; step_size_this_tick }
+            print_endline
+              (Printf.sprintf "tick %f" (Signal.sample t.frequency_hz ctx));
+            { oscilator_value_01; step_size_this_tick })
           else state
         in
         (Some state, state.oscilator_value_01 < 0.5))

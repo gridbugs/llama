@@ -146,8 +146,7 @@ let signal (input : (_, _) Input.t) ~main_sequencer ~secondary_sequencer
   in
   let effect_clock =
     clock_of_frequency_hz
-      (global_controls.noise_sah_frequency |> scale 10.0 |> offset 1.0
-     |> debug_print_float_endline)
+      (global_controls.noise_sah_frequency |> scale 10.0 |> offset 1.0)
   in
   let voices =
     List.map voices

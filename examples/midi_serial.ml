@@ -18,17 +18,21 @@ module Controls = struct
   let protect c = butterworth_low_pass_filter c ~cutoff_hz:(const 10.0)
 
   let of_controller_table ~main_controller_table ~secondary_controller_table =
-    let get = Midi.Controller_table.get_raw secondary_controller_table in
+    let base_controller = 31 in
+    let get i =
+      Midi.Controller_table.get_raw secondary_controller_table
+        (base_controller + i)
+    in
     let inv = map ~f:(fun x -> 1.0 -. x) in
     {
-      lfo_frequency = get 28 |> inv |> protect;
-      low_pass_filter_cutoff = get 21 |> inv |> exp_01 4.0 |> protect;
-      low_pass_filter_resonance = get 22 |> protect;
-      high_pass_filter_cutoff = get 23 |> exp_01 4.0 |> protect;
-      high_pass_filter_resonance = get 24 |> protect;
-      detune = get 25 |> protect;
-      lfo_scale = get 26 |> protect;
-      saturate_boost = get 27 |> protect;
+      low_pass_filter_cutoff = get 0 |> inv |> exp_01 4.0 |> protect;
+      low_pass_filter_resonance = get 1 |> protect;
+      high_pass_filter_cutoff = get 2 |> exp_01 4.0 |> protect;
+      high_pass_filter_resonance = get 3 |> protect;
+      detune = get 4 |> protect;
+      lfo_scale = get 5 |> protect;
+      lfo_frequency = get 6 |> inv |> protect;
+      saturate_boost = get 7 |> protect;
       saturate_threshold =
         Midi.Controller_table.modulation main_controller_table |> inv |> protect;
     }

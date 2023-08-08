@@ -86,10 +86,6 @@ let make_voice _effect_clock pitch_wheel_multiplier waveform
        ~boost:(controls.saturate_boost |> scale 4.0 |> offset 1.0)
        ~threshold:(controls.saturate_threshold |> scale 4.0)
 
-(* Removes any sharp changes from the mouse position which could cause bad
-   sounds to come out of the filter controlled by the mouse *)
-let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
-
 let signal ~main_sequencer ~secondary_sequencer =
   let {
     Midi.Midi_sequencer.voices;
@@ -167,7 +163,9 @@ let () =
       midi_port_names
   else
     let midi_messages =
-      Llama.Midi.live_midi_signal_messages midi_input midi_port |> Result.get_ok
+      match Llama.Midi.live_midi_signal_messages midi_input midi_port with
+      | Ok messages -> messages
+      | Error `No_such_port -> Llama.Midi.dummy_midi_messages
     in
     let midi_messages_control =
       Llama.Midi.live_midi_messages_serial ~port:serial_port ~baud

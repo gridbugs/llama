@@ -20,6 +20,7 @@ val map : 'a t -> f:('a -> 'b) -> 'b t
 val map2 : 'a t -> 'b t -> f:('a -> 'b -> 'c) -> 'c t
 val map3 : 'a t -> 'b t -> 'c t -> f:('a -> 'b -> 'c -> 'd) -> 'd t
 val both : 'a t -> 'b t -> ('a * 'b) t
+val force : 'a t -> to_force:_ t -> 'a t
 val const : 'a -> 'a t
 val var : 'a -> 'a t * 'a ref
 val silence : float t

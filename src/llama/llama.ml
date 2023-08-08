@@ -58,4 +58,6 @@ module Midi = struct
     Signal.of_raw (fun _ ->
         Midi_serial.consume_all_available_bytes midi_serial;
         Midi_serial.drain_messages midi_serial)
+
+  let dummy_midi_messages = Signal.of_raw (fun _ -> [])
 end

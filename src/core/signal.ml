@@ -44,7 +44,7 @@ let sample t (ctx : Ctx.t) =
     | Some sample -> sample
     | None -> sample_and_update t ctx
   else (
-    t.next_sample_index <- t.next_sample_index + 1;
+    t.next_sample_index <- ctx.sample_index + 1;
     sample_and_update t ctx)
 
 let map_ctx t ~f =

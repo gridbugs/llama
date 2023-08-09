@@ -75,15 +75,3 @@
  (modules demo)
  (package llama_interactive)
  (libraries llama_interactive))
-
-(executable
- (public_name midi_cat)
- (modules midi_cat)
- (package llama)
- (libraries llama))
-
-(executable
- (public_name midi_serial)
- (modules midi_serial)
- (package llama_interactive)
- (libraries llama_interactive))

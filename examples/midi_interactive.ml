@@ -116,7 +116,7 @@ let make_voice effect_clock pitch_wheel_multiplier waveform
              lfo *.. controls.lfo_scale |> scale 8000.0;
              sah *.. controls.noise_sah_scale |> scale 4000.0;
            ]
-        |> map ~f:(fun x -> Float.max x 100.0))
+        |> map ~f:(fun x -> Float.max x 200.0))
   in
   let amp_env =
     ar_linear ~gate ~attack_s:(const 0.01)
@@ -129,7 +129,7 @@ let make_voice effect_clock pitch_wheel_multiplier waveform
 let mouse_filter = butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
 
 let signal (input : (_, _) Input.t) ~main_sequencer ~secondary_sequencer
-    ~pad_gates ~wav_players ~echo_effect =
+    ~pad_gates ~wav_players =
   let {
     Midi.Midi_sequencer.voices;
     pitch_wheel_multiplier;
@@ -165,15 +165,25 @@ let signal (input : (_, _) Input.t) ~main_sequencer ~secondary_sequencer
   in
   let _mouse_x = mouse_filter input.mouse.mouse_x in
   let _mouse_y = mouse_filter input.mouse.mouse_y in
-  let volume = Midi.Controller_table.volume main_controller_table in
-  let output = voices +.. drums |> fun signal -> signal *.. volume in
-  if echo_effect then output |> echo ~f:(scale 0.8) ~delay_s:(const 0.2)
-  else output
+  let output =
+    voices +.. drums
+    |> chebyshev_high_pass_filter
+         ~resonance:(global_controls.high_pass_filter_resonance |> scale 10.0)
+         ~cutoff_hz:(global_controls.high_pass_filter_cutoff |> scale 4000.0)
+    |> chebyshev_low_pass_filter
+         ~resonance:(global_controls.low_pass_filter_resonance |> scale 10.0)
+         ~cutoff_hz:(global_controls.low_pass_filter_cutoff |> scale 4000.0)
+    |> saturate
+         ~boost:(global_controls.saturate |> scale 3.0 |> offset 1.0)
+         ~threshold:(const 4.0 -.. (global_controls.saturate |> scale 3.0))
+  in
+  output *.. global_controls.volume
+  |> echo ~delay_s:global_controls.echo_delay ~f:(fun s ->
+         s *.. (global_controls.echo_scale |> scale 0.9))
 
 module Args = struct
   type t = {
     list_midi_ports : bool;
-    echo_effect : bool;
     print_messages : bool;
     midi_port : int;
     sample_paths : string list;
@@ -183,7 +193,6 @@ module Args = struct
 
   let parse () =
     let list_midi_ports = ref false in
-    let echo_effect = ref false in
     let print_messages = ref false in
     let midi_port = ref 0 in
     let sample_paths = ref [] in
@@ -194,7 +203,6 @@ module Args = struct
         ( "--list-midi-ports",
           Arg.Set list_midi_ports,
           "List midi ports by index and exit" );
-        ("--echo-effect", Arg.Set echo_effect, "Use echo effect");
         ( "--print-messages",
           Arg.Set print_messages,
           "Print each midi event to stdout" );
@@ -208,7 +216,6 @@ module Args = struct
       "Play music with a midi keyboard";
     {
       list_midi_ports = !list_midi_ports;
-      echo_effect = !echo_effect;
       print_messages = !print_messages;
       midi_port = !midi_port;
       sample_paths = List.rev !sample_paths;
@@ -220,7 +227,6 @@ end
 let () =
   let {
     Args.list_midi_ports;
-    echo_effect;
     print_messages;
     midi_port;
     sample_paths;
@@ -280,7 +286,6 @@ let () =
           signal
             (Window.input_signals window)
             ~main_sequencer ~secondary_sequencer ~pad_gates ~wav_players
-            ~echo_effect
         in
         let viz'd_signal =
           visualize ~stable:true ~stride:1 ~pixel_scale:1 ~sample_scale:0.4

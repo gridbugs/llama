@@ -20,7 +20,9 @@
  (description "Core types and operations for Llama. This is separate from the llama package so that other packages can be written which define new synthesizer modules based on llama without needing to depend on additional packages required by llama to interact with the sound card.")
  (depends
   (ocaml (>= "4.13"))
-  (llama_midi (= :version))))
+  (llama_midi (= :version)))
+ (conflicts
+   (result (< "1.5"))))
 
 (package
  (name llama)

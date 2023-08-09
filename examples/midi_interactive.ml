@@ -184,7 +184,7 @@ module Args = struct
     print_messages : bool;
     midi_port : int;
     sample_paths : string list;
-    serial_port : string;
+    serial_port : string option;
     baud : int;
   }
 
@@ -193,7 +193,7 @@ module Args = struct
     let print_messages = ref false in
     let midi_port = ref 0 in
     let sample_paths = ref [] in
-    let serial_port = ref "" in
+    let serial_port = ref None in
     let baud = ref 115200 in
     Arg.parse
       [
@@ -206,7 +206,9 @@ module Args = struct
         ( "--midi-port",
           Arg.Set_int midi_port,
           "Use the midi port with this index" );
-        ("--serial-port", Arg.Set_string serial_port, "Use this serial port");
+        ( "--serial-port",
+          Arg.String (fun s -> serial_port := Some s),
+          "Use this serial port" );
         ("--baud", Arg.Set_int baud, "baud rate");
       ]
       (fun anon_arg -> sample_paths := anon_arg :: !sample_paths)
@@ -244,7 +246,11 @@ let () =
       midi_port_names
   else
     let midi_messages =
-      Llama.Midi.live_midi_signal_messages midi_input midi_port |> Result.get_ok
+      match Llama.Midi.live_midi_signal_messages midi_input midi_port with
+      | Ok messages -> messages
+      | Error `No_such_port ->
+          print_endline "Continuing without main midi device...";
+          Llama.Midi.dummy_midi_messages
     in
     let midi_messages =
       if print_messages then
@@ -256,7 +262,12 @@ let () =
       else midi_messages
     in
     let midi_messages_serial =
-      Llama.Midi.live_midi_messages_serial ~port:serial_port ~baud
+      match serial_port with
+      | Some serial_port ->
+          Llama.Midi.live_midi_messages_serial ~port:serial_port ~baud
+      | None ->
+          print_endline "Continuing without serial midi device...";
+          Llama.Midi.dummy_midi_messages
     in
     let midi_messages_serial =
       if print_messages then

@@ -62,5 +62,5 @@ module Midi : sig
   val live_midi_messages_serial :
     port:string -> baud:int -> Message.t list Signal.t
 
-    val dummy_midi_messages : Message.t list Signal.t
+  val dummy_midi_messages : Message.t list Signal.t
 end

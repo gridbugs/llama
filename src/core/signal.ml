@@ -69,7 +69,6 @@ let map3 t1 t2 t3 ~f =
   both t1 (both t2 t3) |> map ~f:(fun (x1, (x2, x3)) -> f x1 x2 x3)
 
 let force t ~to_force = map2 t to_force ~f:(fun x _ -> x)
-
 let const x = of_raw (Fun.const x)
 let of_ref ref = of_raw (fun _ -> !ref)
 

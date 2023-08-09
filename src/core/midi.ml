@@ -84,7 +84,6 @@ module Midi_sequencer = struct
     in
     let controller_refs = Controller_table.create_refs () in
     let pitch_wheel_multiplier = ref 1.0 in
-    let next_voice_index = ref 0 in
     let signal_to_update_state =
       Signal.of_raw (fun ctx ->
           let voice_messages =
@@ -118,23 +117,27 @@ module Midi_sequencer = struct
                       (* Update the velocity *)
                       Array.set voices voice_index_already_assigned_to_note
                         { note; gate = true; velocity }
-                  | None ->
-                      let voice_index = !next_voice_index in
-                      next_voice_index := (voice_index + 1) mod polyphony;
-                      Array.set currently_playing_voice_index_by_note note
-                        (Some voice_index);
-                      let current_voice = Array.get voices voice_index in
-                      if current_voice.gate then
-                        (* Another note is still using that voice. Clear its
-                           mapping from note -> voice so when the note is
-                           released we don't turn off the voice. *)
-                        Array.set currently_playing_voice_index_by_note
-                          current_voice.note None;
-                      (* Store the mapping from voice to note so if another note takes this
-                         voice it can update the fact the the current note no longer holds
-                         it. *)
-                      Array.set voices voice_index
-                        { note; gate = true; velocity })
+                  | None -> (
+                      match find_free_voice_index () with
+                      | None ->
+                          (* There are no free voices for the new note *) ()
+                      | Some voice_index ->
+                          (* Store the mapping from note -> voice so that when the note
+                             is released we turn off the right voice. *)
+                          Array.set currently_playing_voice_index_by_note note
+                            (Some voice_index);
+                          let current_voice = Array.get voices voice_index in
+                          if current_voice.gate then
+                            (* Another note is still using that voice. Clear its
+                               mapping from note -> voice so when the note is
+                               released we don't turn off the voice. *)
+                            Array.set currently_playing_voice_index_by_note
+                              current_voice.note None;
+                          (* Store the mapping from voice to note so if another note takes this
+                             voice it can update the fact the the current note no longer holds
+                             it. *)
+                          Array.set voices voice_index
+                            { note; gate = true; velocity }))
               | Pitch_wheel_change { signed_value } ->
                   pitch_wheel_multiplier :=
                     pitch_wheel_to_pitch_multiplier signed_value

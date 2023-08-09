@@ -6,7 +6,8 @@ type waveform = Oscillator.waveform = Sine | Saw | Triangle | Pulse | Noise
 
 let waveform_to_string = Oscillator.waveform_to_string
 
-let oscillator ?(pulse_width_01 = const 0.5) waveform frequency_hz =
+let oscillator ?(pulse_width_01 = const 0.5)
+    ?(reset_trigger = Signal.Trigger.never) waveform frequency_hz =
   Oscillator.(
     signal
       {
@@ -14,7 +15,7 @@ let oscillator ?(pulse_width_01 = const 0.5) waveform frequency_hz =
         frequency_hz;
         pulse_width_01;
         reset_offset_01 = const 0.0;
-        reset_trigger = Signal.Trigger.never;
+        reset_trigger;
       })
 
 let noise_01 () = oscillator (const Noise) (const 0.0) |> to_01

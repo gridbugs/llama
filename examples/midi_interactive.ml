@@ -5,9 +5,8 @@ open Dsl
 module Controls = struct
   type global = {
     volume : float t;
-    saturate : float t;
-    low_pass_filter_cutoff : float t;
-    low_pass_filter_resonance : float t;
+    saturate_boost : float t;
+    saturate_threshold : float t;
     high_pass_filter_cutoff : float t;
     high_pass_filter_resonance : float t;
     echo_delay : float t;
@@ -20,8 +19,8 @@ module Controls = struct
     decay : float t;
     sustain : float t;
     release : float t;
-    filter_envelope_scale : float t;
-    filter_resonance : float t;
+    low_pass_filter_cutoff : float t;
+    low_pass_filter_resonance : float t;
     detune : float t;
     lfo_frequency : float t;
     lfo_scale : float t;
@@ -30,11 +29,9 @@ module Controls = struct
 
   type nonrec t = { global : global; note : note }
 
-  let protect c = butterworth_low_pass_filter c ~cutoff_hz:(const 10.0)
-
   let of_controller_table ~main_controller_table ~secondary_controller_table =
     let inv = map ~f:(fun x -> 1.0 -. x) in
-    let freq = exp_01 1.0 in
+    let freq = exp_01 2.0 in
     let get_main =
       let base = 21 in
       fun i -> Midi.Controller_table.get_raw main_controller_table (base + i)
@@ -47,29 +44,27 @@ module Controls = struct
     {
       global =
         {
-          volume = Midi.Controller_table.volume main_controller_table |> protect;
-          saturate =
-            Midi.Controller_table.modulation main_controller_table |> protect;
-          low_pass_filter_cutoff = get_main 4 |> inv |> exp_01 4.0 |> protect;
-          low_pass_filter_resonance = get_main 5 |> protect;
-          high_pass_filter_cutoff = get_main 6 |> exp_01 4.0 |> protect;
-          high_pass_filter_resonance = get_main 7 |> protect;
-          echo_delay = const 0.2;
-          echo_scale = get_secondary 6 |> protect;
-          noise_sah_frequency = get_secondary 1 |> freq;
+          volume = Midi.Controller_table.volume main_controller_table;
+          saturate_boost = get_secondary 7;
+          saturate_threshold = get_secondary 3;
+          high_pass_filter_cutoff = get_main 6 |> exp_01 4.0;
+          high_pass_filter_resonance = get_main 7;
+          echo_delay = get_secondary 4;
+          echo_scale = get_secondary 0;
+          noise_sah_frequency = get_secondary 5 |> freq;
         };
       note =
         {
-          attack = get_main 0 |> protect;
-          decay = get_main 1 |> protect;
-          sustain = get_main 2 |> inv |> protect;
-          release = get_main 3 |> protect;
-          filter_envelope_scale = get_secondary 3 |> inv |> protect;
-          filter_resonance = get_secondary 2 |> protect;
-          detune = get_secondary 7 |> protect;
-          lfo_frequency = get_secondary 0 |> freq |> protect;
-          lfo_scale = get_secondary 4 |> protect;
-          noise_sah_scale = get_secondary 5 |> protect;
+          attack = get_main 0;
+          decay = get_main 1;
+          sustain = get_main 2 |> inv;
+          release = get_main 3;
+          low_pass_filter_cutoff = get_main 4 |> inv |> exp_01 4.0;
+          low_pass_filter_resonance = get_main 5;
+          detune = Midi.Controller_table.modulation main_controller_table;
+          lfo_frequency = get_secondary 6 |> freq;
+          lfo_scale = get_secondary 2;
+          noise_sah_scale = get_secondary 1;
         };
     }
 end
@@ -79,25 +74,28 @@ let make_voice effect_clock pitch_wheel_multiplier waveform
     { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } =
   let lfo =
     low_frequency_oscillator_01 (const Sine)
-      (controls.lfo_frequency |> scale 40.0)
+      (controls.lfo_frequency |> scale 20.0)
       (Gate.to_trigger gate)
   in
   let noise = noise_1 () in
   let sah =
     sample_and_hold noise effect_clock
-    |> butterworth_low_pass_filter ~cutoff_hz:(const 100.0)
+    |> butterworth_low_pass_filter ~cutoff_hz:(const 20.0)
   in
   let detune_factor = controls.detune |> scale 0.02 |> offset 1.0 in
   let oscillator_frequency_hz = frequency_hz *.. pitch_wheel_multiplier in
+  let gate_trigger = Gate.to_trigger gate in
+  (* the reset trigger on the oscillator prevents the detuning from causing the oscillators to get stuck out of sync *)
+  let mk_osc fr = oscillator waveform ~reset_trigger:gate_trigger fr in
   let osc =
     mean
       [
-        oscillator waveform oscillator_frequency_hz;
-        oscillator waveform (oscillator_frequency_hz *.. detune_factor);
-        oscillator waveform (oscillator_frequency_hz /.. detune_factor);
+        mk_osc oscillator_frequency_hz;
+        mk_osc (oscillator_frequency_hz *.. detune_factor);
+        mk_osc (oscillator_frequency_hz /.. detune_factor);
       ]
   in
-  let env_adj s = s |> scale 2.0 |> offset 0.1 in
+  let env_adj s = s |> scale 4.0 |> offset 0.01 in
   let filter_env =
     adsr_linear ~gate
       ~attack_s:(controls.attack |> env_adj)
@@ -108,15 +106,16 @@ let make_voice effect_clock pitch_wheel_multiplier waveform
   in
   let filtered_osc =
     chebyshev_low_pass_filter osc
-      ~resonance:(controls.filter_resonance |> scale 10.0)
+      ~resonance:(controls.low_pass_filter_resonance |> scale 10.0)
       ~cutoff_hz:
         (sum
            [
-             filter_env *.. controls.filter_envelope_scale |> scale 8000.0;
+             filter_env *.. controls.low_pass_filter_cutoff |> scale 8000.0;
              lfo *.. controls.lfo_scale |> scale 8000.0;
              sah *.. controls.noise_sah_scale |> scale 4000.0;
            ]
-        |> map ~f:(fun x -> Float.max x 200.0))
+        |> map ~f:(fun x -> Float.max x 200.0)
+        |> butterworth_low_pass_filter ~cutoff_hz:(const 20.0))
   in
   let amp_env =
     ar_linear ~gate ~attack_s:(const 0.01)
@@ -170,12 +169,10 @@ let signal (input : (_, _) Input.t) ~main_sequencer ~secondary_sequencer
     |> chebyshev_high_pass_filter
          ~resonance:(global_controls.high_pass_filter_resonance |> scale 10.0)
          ~cutoff_hz:(global_controls.high_pass_filter_cutoff |> scale 4000.0)
-    |> chebyshev_low_pass_filter
-         ~resonance:(global_controls.low_pass_filter_resonance |> scale 10.0)
-         ~cutoff_hz:(global_controls.low_pass_filter_cutoff |> scale 4000.0)
     |> saturate
-         ~boost:(global_controls.saturate |> scale 3.0 |> offset 1.0)
-         ~threshold:(const 4.0 -.. (global_controls.saturate |> scale 3.0))
+         ~boost:(global_controls.saturate_boost |> scale 3.0 |> offset 1.0)
+         ~threshold:
+           (const 6.0 -.. (global_controls.saturate_threshold |> scale 5.0))
   in
   output *.. global_controls.volume
   |> echo ~delay_s:global_controls.echo_delay ~f:(fun s ->
@@ -272,7 +269,7 @@ let () =
       else midi_messages_serial
     in
     let main_sequencer =
-      Llama.Midi.Midi_sequencer.signal midi_messages ~channel:0 ~polyphony:12
+      Llama.Midi.Midi_sequencer.signal midi_messages ~channel:0 ~polyphony:4
     in
     let secondary_sequencer =
       Llama.Midi.Midi_sequencer.signal midi_messages_serial ~channel:0

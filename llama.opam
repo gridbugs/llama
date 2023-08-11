@@ -34,3 +34,4 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/gridbugs/llama.git"
+available: arch != "arm32" & arch != "ppc64" & arch != "s390x" & arch != "x86_32"

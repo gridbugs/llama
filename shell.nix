@@ -1,11 +1,11 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> { } }:
 pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
     gcc
-    pkgconfig
+    pkg-config
     gmp
     libffi
-    alsaLib
+    alsa-lib
     xorg.libX11
     xorg.libXcursor
     xorg.libXrandr

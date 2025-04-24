@@ -30,7 +30,6 @@ soundcard. Install it with your package manager. Then you should be able to
 build and some example programs:
 ```
 $ dune exec ./examples/polyphonic_events.exe
-$ dune exec ./examples/random_pentatonic.exe
 $ dune exec ./examples/echo_effect.exe
 ```
 

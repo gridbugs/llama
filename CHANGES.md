@@ -1,3 +1,10 @@
+## Unreleased
+
+- Remove rust dependency. This removes support for live midi, decoding wav
+  files, and windows, but simplifies the build dramatically and allows support
+  for more recent versions of the compiler. APIs have been changed decouple
+  visualization from playback and to better accommodate libao.
+
 ## 0.1.0
 
 - Introduce `Signal.Gate.t` and `Signal.Trigger.t` wrappers of `bool Signal.t`

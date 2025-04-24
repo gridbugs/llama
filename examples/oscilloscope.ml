@@ -36,4 +36,4 @@ let () =
       let hue = 240. +. (x *. 60.0) in
       let r, g, b = hsv_to_rgb hue 0.5 0.9 in
       (r, g, b, 1.0))
-    ~pixel_scale:16 ~scale_output_volume:0.1 ~stable:true signal
+    ~pixel_scale:16 ~stable:true signal

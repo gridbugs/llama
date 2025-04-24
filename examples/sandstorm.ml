@@ -23,23 +23,6 @@ let mk_voice frequency gate ~preset =
   in
   lazy_amplifier ~volume:amp_env filtered_osc
 
-let signal_midi =
-  let port = 1 in
-  match
-    Midi.Midi_input.create ()
-    |> Midi.live_midi_sequencer ~port ~channel:0 ~polyphony:12
-  with
-  | Ok { Midi.Midi_sequencer.voices; pitch_wheel_multiplier; controller_table }
-    ->
-      let preset = Midi.Controller_table.get_raw controller_table 1 in
-      List.map voices
-        ~f:(fun { Midi.Midi_sequencer.frequency_hz; gate; velocity = _ } ->
-          mk_voice (frequency_hz *.. pitch_wheel_multiplier) gate ~preset)
-      |> sum
-  | Error `No_such_port ->
-      Printf.eprintf "No such midi port: %d\n" port;
-      silence
-
 let signal_sdl (input : (_, _) Input.t) =
   let mouse_x =
     input.mouse.mouse_x |> butterworth_low_pass_filter ~cutoff_hz:(const 10.0)
@@ -54,14 +37,9 @@ let signal_sdl (input : (_, _) Input.t) =
   |> sum
   |> chebyshev_low_pass_filter ~resonance:(const 2.0)
        ~cutoff_hz:(sum [ const 500.0; mouse_y |> scale 8000.0 ])
-(*|> map ~f:(fun x -> x *. 2.0 |> Float.clamp_sym ~mag:1.0) *)
 
-let signal input = signal_midi +.. signal_sdl input
+let signal input = signal_sdl input
 
 let () =
-  with_window (fun window ->
-      let viz'd_signal =
-        visualize ~stride:2 ~stable:true ~pixel_scale:2 window
-          (signal (Window.input_signals window))
-      in
-      play_signal ~scale_output_volume:0.1 viz'd_signal)
+  with_visualization_window ~stride:2 ~stable:true ~pixel_scale:2 (fun window ->
+      signal (Window.input_signals window))

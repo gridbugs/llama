@@ -83,15 +83,10 @@ end
 
 let () =
   let { Args.midi_file_path } = Args.parse () in
-  with_window ~background_rgba_01:(0.0, 0.0, 0.2, 1.0) (fun window ->
+  with_visualization_window ~background_rgba_01:(0.0, 0.0, 0.2, 1.0)
+    ~stable:false ~stride:4 ~pixel_scale:6 ~sample_scale:0.2
+    ~sample_to_rgba_01:(Fun.const (0.6, 0.5, 0.2, 1.0))
+    (fun window ->
       let reader = Llama_midi.File_reader.of_path midi_file_path in
       let data = Llama_midi.File_reader.read reader in
-      let signal =
-        midi_signal_with_effects (Window.input_signals window) data
-      in
-      let viz'd_signal =
-        visualize ~stable:false ~stride:4 ~pixel_scale:6 ~sample_scale:0.2
-          ~sample_to_rgba_01:(Fun.const (0.6, 0.5, 0.2, 1.0))
-          window signal
-      in
-      play_signal ~scale_output_volume:0.01 viz'd_signal)
+      midi_signal_with_effects (Window.input_signals window) data)

@@ -1,2 +1,9 @@
 (lang dune 3.0)
-(env (dev (flags :standard -warn-error -26-27-32-33-34-37-39)))
+
+(env
+ (dev
+  (flags :standard -warn-error -26-27-32-33-34-37-39)))
+
+(lock_dir
+ (path "dev-tools.locks/ocaml-lsp-server")
+ (repositories upstream overlay))

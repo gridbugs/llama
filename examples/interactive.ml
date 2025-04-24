@@ -60,14 +60,9 @@ let mk_synth (input : (_, _) Input.t) =
   |> echo ~f:echo_effect ~delay_s:(const 0.5)
 
 let () =
-  with_window (fun window ->
-      let signal = mk_synth (Window.input_signals window) in
-      let viz'd_signal =
-        visualize ~stable:true ~stride:4 ~sample_scale:0.05
-          ~sample_to_rgba_01:(fun x ->
-            let g = 0.0 in
-            let rb = 0.2 +. Float.abs x in
-            (rb, g, rb, 1.0))
-          window signal
-      in
-      play_signal ~scale_output_volume:0.1 viz'd_signal)
+  with_visualization_window ~stable:true ~stride:4 ~sample_scale:0.05
+    ~sample_to_rgba_01:(fun x ->
+      let g = 0.0 in
+      let rb = 0.2 +. Float.abs x in
+      (rb, g, rb, 1.0))
+    (fun window -> mk_synth (Window.input_signals window))

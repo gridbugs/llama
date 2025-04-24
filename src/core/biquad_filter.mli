@@ -1,6 +1,7 @@
 module Butterworth : sig
   type t = { signal : float Signal.t; cutoff_hz : float Signal.t }
-  (** The literature refers to the cutoff frequency as the "half power frequency" *)
+  (** The literature refers to the cutoff frequency as the "half power
+      frequency" *)
 
   val signal_low_pass : t -> filter_order_half:int -> float Signal.t
   val signal_high_pass : t -> filter_order_half:int -> float Signal.t

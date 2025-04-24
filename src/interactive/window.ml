@@ -233,14 +233,16 @@ type t = {
   fps : float;
   background_rgba_01 : Types.rgba_01;
   visualization : Visualization.t option ref;
+  viz_queue : float Llama.Player.Viz_queue.t option;
   input_signals : (Signal.Gate.t, float Signal.t) Input.t;
   input_refs : (bool ref, float ref) Input.t;
 }
 
-let proc_event t event =
+let proc_event t event ~on_close =
   let typ = Sdl.Event.get event Sdl.Event.typ in
   if typ == Sdl.Event.quit then (
     Sdl.quit ();
+    on_close ();
     exit 0)
   else if typ == Sdl.Event.key_down then
     let scancode = Sdl.Event.get event Sdl.Event.keyboard_scancode in
@@ -261,33 +263,12 @@ let proc_event t event =
     t.input_refs.mouse.mouse_x := mouse_x_01;
     t.input_refs.mouse.mouse_y := mouse_y_01)
 
-let rec drain_events t =
+let rec drain_events t ~on_close =
   let event = Sdl.Event.create () in
   if Sdl.poll_event (Some event) then (
-    proc_event t event;
-    drain_events t)
+    proc_event t event ~on_close;
+    drain_events t ~on_close)
   else ()
-
-let create ~title ~width ~height ~fps ~background_rgba_01 =
-  Global.init ();
-  match
-    Sdl.create_window_and_renderer ~w:width ~h:height Sdl.Window.windowed
-  with
-  | Error (`Msg msg) ->
-      Sdl.log "Error creating window: %s" msg;
-      exit 1
-  | Ok (window, renderer) ->
-      let input_signals, input_refs = create_inputs () in
-      Sdl.set_window_title window title;
-      {
-        window;
-        renderer;
-        fps;
-        background_rgba_01;
-        visualization = ref None;
-        input_signals;
-        input_refs;
-      }
 
 let log_error = function Ok () -> () | Error (`Msg msg) -> Sdl.log "%s" msg
 
@@ -305,50 +286,57 @@ let render t =
           Sdl.render_fill_rect t.renderer (Some sdl_rect) |> log_error));
   Sdl.render_present t.renderer
 
-let visualize t ?(pixel_scale = Defaults.pixel_scale)
+let create ?(title = Defaults.title) ?(width = Defaults.width)
+    ?(height = Defaults.height) ?(fps = Defaults.fps)
+    ?(background_rgba_01 = Defaults.background_rgba_01)
+    ?(pixel_scale = Defaults.pixel_scale)
     ?(sample_scale = Defaults.sample_scale)
     ?(sample_to_rgba_01 = Defaults.sample_to_rgb_01) ?(stride = Defaults.stride)
-    ?(stable = Defaults.stable) signal =
-  let style =
-    { Visualization_style.pixel_scale; sample_scale; sample_to_rgba_01 }
-  in
-  let visualization = Visualization.create ~style ~stable ~stride in
-  t.visualization := Some visualization;
-  Signal.of_raw (fun (ctx : Ctx.t) ->
-      let sample = Signal.sample signal ctx in
-      Sample_buffer.append_unless_full visualization.sample_buffer sample;
-      sample)
+    ?(stable = Defaults.stable) viz_queue =
+  Global.init ();
+  match
+    Sdl.create_window_and_renderer ~w:width ~h:height Sdl.Window.windowed
+  with
+  | Error (`Msg msg) ->
+      Sdl.log "Error creating window: %s" msg;
+      exit 1
+  | Ok (window, renderer) ->
+      let input_signals, input_refs = create_inputs () in
+      Sdl.set_window_title window title;
+      let style =
+        { Visualization_style.pixel_scale; sample_scale; sample_to_rgba_01 }
+      in
+      let visualization = Visualization.create ~style ~stable ~stride in
+      {
+        window;
+        renderer;
+        fps;
+        background_rgba_01;
+        visualization = ref (Some visualization);
+        viz_queue = Some viz_queue;
+        input_signals;
+        input_refs;
+      }
 
-let rec main_loop t =
-  let open Lwt.Syntax in
-  drain_events t;
-  render t;
-  let* () = Lwt_unix.sleep (1.0 /. t.fps) in
-  main_loop t
+let render' t =
+  (match !(t.visualization) with
+  | None -> ()
+  | Some visualization -> (
+      match t.viz_queue with
+      | None -> ()
+      | Some viz_queue ->
+          Llama.Player.Viz_queue.drain viz_queue ~f:(fun sample ->
+              Sample_buffer.append_unless_full visualization.sample_buffer
+                sample)));
+  render t
 
-let with_lwt ?(title = Defaults.title) ?(width = Defaults.width)
-    ?(height = Defaults.height) ?(fps = Defaults.fps)
-    ?(background_rgba_01 = Defaults.background_rgba_01)
-    ?(f_delay_s = Defaults.f_delay_s) f =
-  let open Lwt.Syntax in
-  let t = create ~title ~width ~height ~fps ~background_rgba_01 in
-  let f_lwt =
-    (* Wait before running the user function to give the window time to open
-       and get ready. [f] is probably going to start doing realtime things such as
-       run oscillators and opening the window can consume a lot of cpu which can
-       interrupt the oscillation and lead to audible artifacts. *)
-    let* () = Lwt_unix.sleep f_delay_s in
-    f t
-  in
-  let main_loop_lwt = main_loop t in
-  let+ _, f_out = Lwt.both main_loop_lwt f_lwt in
-  f_out
+let frame t ~on_close =
+  render' t;
+  drain_events t ~on_close;
+  Thread.delay (1. /. t.fps)
 
-let with_ ?(title = Defaults.title) ?(width = Defaults.width)
-    ?(height = Defaults.height) ?(fps = Defaults.fps)
-    ?(background_rgba_01 = Defaults.background_rgba_01)
-    ?(f_delay_s = Defaults.f_delay_s) f =
-  Lwt_main.run
-    (with_lwt ~title ~width ~height ~fps ~background_rgba_01 ~f_delay_s f)
+let rec loop t ~on_close =
+  frame t ~on_close;
+  loop t ~on_close
 
 let input_signals t = t.input_signals

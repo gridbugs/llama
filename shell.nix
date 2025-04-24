@@ -6,6 +6,7 @@ pkgs.mkShell {
     gmp
     libffi
     alsa-lib
+    libao
     xorg.libX11
     xorg.libXcursor
     xorg.libXrandr

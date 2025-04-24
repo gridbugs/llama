@@ -35,12 +35,6 @@
  (libraries llama))
 
 (executable
- (public_name random_pentatonic)
- (modules random_pentatonic)
- (package llama)
- (libraries llama llama.io))
-
-(executable
  (public_name oscilloscope)
  (modules oscilloscope)
  (package llama_interactive)
@@ -59,19 +53,7 @@
  (libraries llama_interactive llama))
 
 (executable
- (public_name midi_interactive)
- (modules midi_interactive)
- (package llama_interactive)
- (libraries llama_interactive llama.io))
-
-(executable
  (public_name sandstorm)
  (modules sandstorm)
  (package llama_interactive)
  (libraries llama_interactive keyboard_helper))
-
-(executable
- (public_name demo)
- (modules demo)
- (package llama_interactive)
- (libraries llama_interactive))

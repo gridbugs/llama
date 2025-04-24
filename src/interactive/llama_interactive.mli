@@ -5,66 +5,37 @@ end
 module Window = Window
 module Input = Input
 
-val with_window_lwt :
-  ?title:string ->
-  ?width:int ->
-  ?height:int ->
-  ?fps:float ->
-  ?background_rgba_01:Types.rgba_01 ->
-  ?f_delay_s:float ->
-  (Window.t -> 'a Lwt.t) ->
-  'a Lwt.t
-
-val with_window :
-  ?title:string ->
-  ?width:int ->
-  ?height:int ->
-  ?fps:float ->
-  ?background_rgba_01:Types.rgba_01 ->
-  ?f_delay_s:float ->
-  (Window.t -> 'a Lwt.t) ->
-  'a
-
-val visualize :
-  Window.t ->
-  ?pixel_scale:int ->
-  ?sample_scale:float ->
-  ?sample_to_rgba_01:(float -> float * float * float * float) ->
-  ?stride:int ->
-  ?stable:bool ->
-  float Llama.Signal.t ->
-  float Llama.Signal.t
-
-val play_signal_visualized_lwt :
-  ?downsample:int ->
-  ?scale_output_volume:float ->
-  ?title:string ->
-  ?width:int ->
-  ?height:int ->
-  ?fps:float ->
-  ?background_rgba_01:Types.rgba_01 ->
-  ?f_delay_s:float ->
-  ?pixel_scale:int ->
-  ?sample_scale:float ->
-  ?sample_to_rgba_01:(float -> Types.rgba_01) ->
-  ?stride:int ->
-  ?stable:bool ->
-  float Signal.t ->
-  'a Lwt.t
-
 val play_signal_visualized :
-  ?downsample:int ->
-  ?scale_output_volume:float ->
+  ?buffer_size_in_samples:int ->
   ?title:string ->
   ?width:int ->
   ?height:int ->
   ?fps:float ->
   ?background_rgba_01:Types.rgba_01 ->
-  ?f_delay_s:float ->
   ?pixel_scale:int ->
   ?sample_scale:float ->
   ?sample_to_rgba_01:(float -> Types.rgba_01) ->
   ?stride:int ->
   ?stable:bool ->
   float Signal.t ->
-  'a
+  unit
+(** Take a signal and play it, rendering a visualization in a window. *)
+
+val with_visualization_window :
+  ?buffer_size_in_samples:int ->
+  ?title:string ->
+  ?width:int ->
+  ?height:int ->
+  ?fps:float ->
+  ?background_rgba_01:Types.rgba_01 ->
+  ?pixel_scale:int ->
+  ?sample_scale:float ->
+  ?sample_to_rgba_01:(float -> Types.rgba_01) ->
+  ?stride:int ->
+  ?stable:bool ->
+  (Window.t -> float Signal.t) ->
+  unit
+(** Open a window and generate a signal using a supplied function, rendering a
+    visualization in the window. The window is passed to the function, allowing
+    interactive signals from the window (keystrokes, mouse movements) to be use
+    to generate the signal. *)

@@ -5,3 +5,5 @@ _build
 _opam
 /*.wav
 /*.mid
+dev-tools.locks
+dune.lock

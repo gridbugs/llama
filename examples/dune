@@ -35,6 +35,12 @@
  (libraries llama))
 
 (executable
+ (public_name polyphonic_events_graphical)
+ (modules polyphonic_events_graphical)
+ (package llama_interactive)
+ (libraries llama_interactive))
+
+(executable
  (public_name oscilloscope)
  (modules oscilloscope)
  (package llama_interactive)

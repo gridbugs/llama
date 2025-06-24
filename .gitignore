@@ -6,4 +6,3 @@ _opam
 /*.wav
 /*.mid
 dev-tools.locks
-dune.lock

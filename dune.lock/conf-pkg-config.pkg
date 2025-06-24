@@ -1,0 +1,6 @@
+(version 4)
+
+(build
+ (run pkgconf --version))
+
+(depexts pkgconf)

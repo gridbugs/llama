@@ -1,0 +1,12 @@
+(version v0.17.2)
+
+(build
+ (run dune build -p %{pkg-self:name} -j %{jobs}))
+
+(depends ocaml base ppxlib_jane dune ppxlib)
+
+(source
+ (fetch
+  (url
+   https://github.com/janestreet/ppx_globalize/archive/refs/tags/v0.17.2.tar.gz)
+  (checksum md5=9df1288f1113c1daffd13cfced63a77e)))

@@ -60,19 +60,6 @@
      --enable-tsan)
     (when
      (catch_undefined_var
-      (and_absorb_undefined_var
-       (not %{pkg:ocaml-option-32bit:installed})
-       (not %{pkg:ocaml-option-musl:installed})
-       true)
-      false)
-     CC=cc)
-    (when
-     (catch_undefined_var
-      (and_absorb_undefined_var %{pkg:ocaml-option-tsan:installed} true)
-      false)
-     CC=clang)
-    (when
-     (catch_undefined_var
       (and_absorb_undefined_var %{pkg:ocaml-option-musl:installed} true)
       false)
      CC=musl-gcc)
@@ -80,12 +67,14 @@
      (catch_undefined_var
       (and_absorb_undefined_var %{pkg:ocaml-option-musl:installed} true)
       false)
-     "CFLAGS=-Os -mno-outline-atomics")
+     CFLAGS=-Os)
     (when
      (catch_undefined_var
       (or_absorb_undefined_var
        %{pkg:ocaml-option-leak-sanitizer:installed}
-       false)
+       (and_absorb_undefined_var
+        %{pkg:ocaml-option-address-sanitizer:installed}
+        true))
       false)
      LDFLAGS=-Wl,--no-as-needed,-ldl)
     (when
@@ -97,12 +86,12 @@
        %{pkg:ocaml-option-address-sanitizer:installed}
        true)
       false)
-     "CC=clang -fsanitize=address -fno-omit-frame-pointer -O1 -g")
+     "CC=gcc -ldl -fsanitize=address -fno-omit-frame-pointer -O1 -g")
     (when
      (catch_undefined_var
       (and_absorb_undefined_var %{pkg:ocaml-option-32bit:installed} true)
       false)
-     "CC=gcc -Wl,-read_only_relocs,suppress -arch i386 -m32")
+     "CC=gcc -m32")
     (when
      (catch_undefined_var
       (and_absorb_undefined_var %{pkg:ocaml-option-musl:installed} true)
@@ -112,7 +101,7 @@
      (catch_undefined_var
       (and_absorb_undefined_var %{pkg:ocaml-option-32bit:installed} true)
       false)
-     --host=i386-apple-darwin13.2.0)
+     --host=i386-linux)
     (when
      (catch_undefined_var %{pkg:ocaml-option-static:installed} false)
      LIBS=-static)

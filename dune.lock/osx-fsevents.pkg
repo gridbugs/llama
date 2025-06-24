@@ -1,0 +1,15 @@
+(version 0.2.0)
+
+(install
+ (run %{make} install))
+
+(build
+ (run %{make} build))
+
+(depends ocaml ocamlfind ctypes osx-cf cmdliner)
+
+(source
+ (fetch
+  (url https://github.com/dsheets/ocaml-osx-fsevents/archive/0.2.0.tar.gz)
+  (checksum
+   sha256=a80d2ee873b1660a0c6f2cb1b4b21d34e80aeee3b7bc3395509ab1dc1e0e3de2)))

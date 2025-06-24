@@ -58,7 +58,7 @@
    (= :version))
   (tsdl
    (>= 1))
-  (osx-fsevents
+  (fsevents
    (= :os macos))
   (conf-pkg-config :build)))
 

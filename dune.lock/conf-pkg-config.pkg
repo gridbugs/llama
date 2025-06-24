@@ -1,6 +1,6 @@
 (version 4)
 
 (build
- (run pkg-config --help))
+ (run pkgconf --version))
 
-(depexts pkg-config)
+(depexts pkgconf)

@@ -1,7 +1,9 @@
 { pkgs ? import <nixpkgs> { } }:
 pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
+    ocaml
     gcc
+    pkgconf
     pkg-config
     gmp
     libffi

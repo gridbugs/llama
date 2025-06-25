@@ -1,0 +1,15 @@
+(version 0.2.4)
+
+(build
+ (progn
+  (when
+   %{pkg-self:dev}
+   (run dune subst))
+  (run dune build -p %{pkg-self:name} -j %{jobs} @install)))
+
+(depends conf-ao conf-pkg-config dune dune-configurator)
+
+(source
+ (fetch
+  (url https://github.com/savonet/ocaml-ao/archive/v0.2.4.tar.gz)
+  (checksum md5=cc7e55bd899442e37757316cc06db3d7)))

@@ -1,0 +1,8 @@
+(version 1)
+
+(build
+ (run pkg-config sdl2))
+
+(depends conf-pkg-config)
+
+(depexts sdl2)

@@ -58,6 +58,8 @@
    (= :version))
   (tsdl
    (>= 1))
+  (fsevents
+   (= :os macos))
   (conf-pkg-config :build)))
 
 (package

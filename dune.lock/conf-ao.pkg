@@ -1,8 +1,0 @@
-(version 1)
-
-(build
- (run pkg-config --exists ao))
-
-(depends conf-pkg-config)
-
-(depexts libao)

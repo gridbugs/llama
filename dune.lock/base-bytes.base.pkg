@@ -1,0 +1,16 @@
+(version base)
+
+(depends
+ (choice
+  ((((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   (ocaml ocamlfind))))
+
+(enabled_on_platforms
+ (only
+  ((arch x86_64)
+   (os macos))
+  ((arch arm64)
+   (os macos))))

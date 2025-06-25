@@ -1,0 +1,36 @@
+(version 0.3.0)
+
+(build
+ (choice
+  ((((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   ((action
+     (progn
+      (when
+       %{pkg-self:dev}
+       (run dune subst))
+      (run dune build -p %{pkg-self:name} -j %{jobs} @install)))))))
+
+(depends
+ (choice
+  ((((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   (dune base-bytes cf ctypes))))
+
+(source
+ (fetch
+  (url
+   https://github.com/mirage/ocaml-fsevents/releases/download/0.3.0/fsevents-lwt-0.3.0.tbz)
+  (checksum
+   sha256=0bbfea93c14e99c1dbb2bf9de2ef8c93e4f1043490df73c00f9c0a969f472b7a)))
+
+(enabled_on_platforms
+ (only
+  ((arch x86_64)
+   (os macos))
+  ((arch arm64)
+   (os macos))))

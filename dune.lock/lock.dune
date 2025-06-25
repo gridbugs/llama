@@ -12,22 +12,16 @@
   ((source
     https://github.com/ocaml/opam-repository.git#9f08af3931bac8fadd1dc3dab3b37b8d89e6169d))))
 
-(expanded_solver_variable_bindings
- (variable_values
-  (with-doc false)
-  (with-dev-setup false)
-  (sys-ocaml-version 4.13.1)
-  (post true)
-  (os-version 24.11)
-  (os-distribution nixos)
-  (os linux)
-  (opam-version 2.2.0~alpha-vendored)
-  (arch x86_64))
- (unset_variables
-  with-test
-  sys-ocaml-libc
-  sys-ocaml-cc
-  sys-ocaml-arch
-  enable-ocaml-beta-repository
-  dev
-  build))
+(solved_for_platforms
+ ((arch x86_64)
+  (os linux))
+ ((arch arm64)
+  (os linux))
+ ((arch x86_64)
+  (os macos))
+ ((arch arm64)
+  (os macos))
+ ((arch x86_64)
+  (os win32))
+ ((arch arm64)
+  (os win32)))

@@ -1,0 +1,15 @@
+(version 1.1.0)
+
+(build
+ (all_platforms
+  ((action (run ocaml pkg/pkg.ml build --dev-pkg %{pkg-self:dev})))))
+
+(depends
+ (all_platforms
+  (ocaml ocamlfind ocamlbuild topkg conf-sdl2 ctypes ctypes-foreign)))
+
+(source
+ (fetch
+  (url https://erratique.ch/software/tsdl/releases/tsdl-1.1.0.tbz)
+  (checksum
+   sha512=f6d429ac5f7d1ea2411fb65f08e454fc5f515879c92e9031afb978dd0c8865739931a83a277fc3bf556e743a710ec8b530717f9e30e353660e1f0219c8293413)))

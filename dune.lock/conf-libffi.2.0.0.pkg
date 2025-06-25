@@ -1,0 +1,105 @@
+(version 2.0.0)
+
+(build
+ (choice
+  ((((arch x86_64)
+     (os linux))
+    ((arch arm64)
+     (os linux))
+    ((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   ((action
+     (run pkg-config libffi))))
+  ((((arch x86_64)
+     (os win32))
+    ((arch arm64)
+     (os win32)))
+   ((action
+     (run
+      (when
+       (catch_undefined_var
+        (and_absorb_undefined_var
+         true
+         (= %{os_distribution} cygwin))
+        false)
+       pkgconf)
+      (when
+       (catch_undefined_var
+        (and_absorb_undefined_var
+         true
+         (= %{os_distribution} cygwin)
+         %{pkg:host-arch-x86_32:installed})
+        false)
+       --personality=i686-w64-mingw32)
+      (when
+       (catch_undefined_var
+        (and_absorb_undefined_var
+         true
+         (= %{os_distribution} cygwin)
+         %{pkg:host-arch-x86_64:installed})
+        false)
+       --personality=x86_64-w64-mingw32)
+      (when
+       (catch_undefined_var
+        (or_absorb_undefined_var
+         false
+         (<> %{os_distribution} cygwin))
+        false)
+       pkg-config)
+      libffi))))))
+
+(depends
+ (choice
+  ((((arch x86_64)
+     (os linux))
+    ((arch arm64)
+     (os linux))
+    ((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   (conf-pkg-config))
+  ((((arch x86_64)
+     (os win32)))
+   (conf-pkg-config host-arch-x86_64 conf-mingw-w64-libffi-x86_64))
+  ((((arch arm64)
+     (os win32)))
+   (conf-pkg-config host-arch-x86_32 conf-mingw-w64-libffi-i686))))
+
+(depexts
+ ((libffi)
+  (and_absorb_undefined_var
+   (= %{os} macos)
+   (= %{os_distribution} homebrew)))
+ ((libffi)
+  (and_absorb_undefined_var
+   (= %{os} macos)
+   (= %{os_distribution} macports)))
+ ((libffi-dev)
+  (= %{os_distribution} alpine))
+ ((libffi-dev)
+  (= %{os_family} debian))
+ ((libffi-dev)
+  (= %{os_family} ubuntu))
+ ((libffi-devel)
+  (= %{os_distribution} centos))
+ ((libffi-devel)
+  (= %{os_family} fedora))
+ ((libffi-devel)
+  (= %{os_distribution} mageia))
+ ((libffi-devel)
+  (= %{os_distribution} ol))
+ ((libffi-devel)
+  (or_absorb_undefined_var
+   (= %{os_family} suse)
+   (= %{os_family} opensuse)))
+ ((libffi)
+  (= %{os} freebsd))
+ ((libffi)
+  (and_absorb_undefined_var
+   (= %{os} win32)
+   (= %{os_distribution} cygwinports)))
+ ((libffi)
+  (= %{os_distribution} nixos)))

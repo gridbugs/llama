@@ -1,0 +1,6 @@
+(version 1)
+
+(enabled_on_platforms
+ (only
+  ((arch arm64)
+   (os win32))))

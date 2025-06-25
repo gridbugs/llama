@@ -1,0 +1,111 @@
+(version 1)
+
+(build
+ (choice
+  ((((arch x86_64)
+     (os linux))
+    ((arch arm64)
+     (os linux))
+    ((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   ((action
+     (run pkg-config sdl2))))
+  ((((arch x86_64)
+     (os win32))
+    ((arch arm64)
+     (os win32)))
+   ((action
+     (run
+      (when
+       (catch_undefined_var
+        (and_absorb_undefined_var
+         true
+         (<> %{os_distribution} cygwinports))
+        false)
+       pkgconf)
+      (when
+       (catch_undefined_var
+        (and_absorb_undefined_var
+         true
+         (<> %{os_distribution} cygwinports)
+         %{pkg:host-arch-x86_32:installed})
+        false)
+       --personality=i686-w64-mingw32)
+      (when
+       (catch_undefined_var
+        (and_absorb_undefined_var
+         true
+         (<> %{os_distribution} cygwinports)
+         %{pkg:host-arch-x86_64:installed})
+        false)
+       --personality=x86_64-w64-mingw32)
+      (when
+       (catch_undefined_var
+        (or_absorb_undefined_var
+         false
+         (<> %{os_distribution} cygwin))
+        false)
+       pkg-config)
+      sdl2))))))
+
+(depends
+ (choice
+  ((((arch x86_64)
+     (os linux))
+    ((arch arm64)
+     (os linux))
+    ((arch x86_64)
+     (os macos))
+    ((arch arm64)
+     (os macos)))
+   (conf-pkg-config))
+  ((((arch x86_64)
+     (os win32)))
+   (conf-pkg-config host-arch-x86_64 conf-mingw-w64-sdl2-x86_64))
+  ((((arch arm64)
+     (os win32)))
+   (conf-pkg-config host-arch-x86_32 conf-mingw-w64-sdl2-i686))))
+
+(depexts
+ ((sdl2-dev)
+  (= %{os_distribution} alpine))
+ ((sdl2)
+  (= %{os_distribution} arch))
+ ((libsdl2-dev)
+  (= %{os_family} debian))
+ ((libsdl2-dev)
+  (= %{os_family} ubuntu))
+ ((SDL2-devel)
+  (= %{os_family} fedora))
+ ((SDL2-devel libwayland-egl adwaita-cursor-theme)
+  (and_absorb_undefined_var
+   (= %{os_family} fedora)
+   (or_absorb_undefined_var
+    (= %{os_version} 37)
+    (= %{os_version} 36))))
+ ((SDL2-devel epel-release)
+  (= %{os_distribution} centos))
+ ((SDL2-devel)
+  (= %{os_distribution} ol))
+ ((sdl2)
+  (= %{os} freebsd))
+ ((sdl2)
+  (and_absorb_undefined_var
+   (= %{os} macos)
+   (= %{os_distribution} homebrew)))
+ ((libsdl2-devel)
+  (= %{os_distribution} mageia))
+ ((sdl2)
+  (= %{os} openbsd))
+ ((libSDL2-devel)
+  (or_absorb_undefined_var
+   (= %{os_family} suse)
+   (= %{os_family} opensuse)))
+ ((SDL2)
+  (and_absorb_undefined_var
+   (= %{os} win32)
+   (= %{os_distribution} cygwinports)))
+ ((SDL2)
+  (= %{os} nixos)))

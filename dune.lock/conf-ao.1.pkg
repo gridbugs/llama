@@ -1,0 +1,28 @@
+(version 1)
+
+(build
+ (all_platforms ((action (run pkg-config --exists ao)))))
+
+(depends
+ (all_platforms (conf-pkg-config)))
+
+(depexts
+ ((libao-devel)
+  (or_absorb_undefined_var
+   (= %{os_distribution} centos)
+   (= %{os_family} fedora)
+   (= %{os_family} suse)
+   (= %{os_family} opensuse)))
+ ((libao)
+  (or_absorb_undefined_var
+   (= %{os} freebsd)
+   (and_absorb_undefined_var
+    (= %{os} macos)
+    (= %{os_distribution} homebrew))
+   (= %{os_distribution} nixos)
+   (= %{os_family} arch)))
+ ((libao-dev)
+  (or_absorb_undefined_var
+   (= %{os_family} debian)
+   (= %{os_family} ubuntu)
+   (= %{os_distribution} alpine))))
